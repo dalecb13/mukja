@@ -1,0 +1,225 @@
+/**
+ * Mukja CSS Custom Properties
+ * 
+ * Import this file in your web app's global CSS to use the design tokens.
+ * Usage: var(--color-primary-500)
+ */
+
+:root {
+  /* === COLORS === */
+  
+  /* Primary - Gochugaru Red */
+  --color-primary-50: #FFF5F5;
+  --color-primary-100: #FFE3E3;
+  --color-primary-200: #FFC9C9;
+  --color-primary-300: #FFA8A8;
+  --color-primary-400: #FF8787;
+  --color-primary-500: #E03E3E;
+  --color-primary-600: #C92A2A;
+  --color-primary-700: #A61E1E;
+  --color-primary-800: #831515;
+  --color-primary-900: #5C0D0D;
+
+  /* Secondary - Sesame */
+  --color-secondary-50: #FDFCFB;
+  --color-secondary-100: #F8F6F3;
+  --color-secondary-200: #EDE8E3;
+  --color-secondary-300: #DDD5CB;
+  --color-secondary-400: #C4B8A9;
+  --color-secondary-500: #A69783;
+  --color-secondary-600: #8B7A66;
+  --color-secondary-700: #6F5F4D;
+  --color-secondary-800: #544838;
+  --color-secondary-900: #3A3127;
+
+  /* Accent - Banchan Green */
+  --color-accent-50: #F0FDF4;
+  --color-accent-100: #DCFCE7;
+  --color-accent-200: #BBF7D0;
+  --color-accent-300: #86EFAC;
+  --color-accent-400: #4ADE80;
+  --color-accent-500: #22C55E;
+  --color-accent-600: #16A34A;
+  --color-accent-700: #15803D;
+  --color-accent-800: #166534;
+  --color-accent-900: #14532D;
+
+  /* Warm - Doenjang Gold */
+  --color-warm-50: #FFFBEB;
+  --color-warm-100: #FEF3C7;
+  --color-warm-200: #FDE68A;
+  --color-warm-300: #FCD34D;
+  --color-warm-400: #FBBF24;
+  --color-warm-500: #D97706;
+  --color-warm-600: #B45309;
+  --color-warm-700: #92400E;
+  --color-warm-800: #78350F;
+  --color-warm-900: #5C2D0E;
+
+  /* Neutrals - Charcoal */
+  --color-neutral-0: #FFFFFF;
+  --color-neutral-50: #FAFAF9;
+  --color-neutral-100: #F5F5F4;
+  --color-neutral-200: #E7E5E4;
+  --color-neutral-300: #D6D3D1;
+  --color-neutral-400: #A8A29E;
+  --color-neutral-500: #78716C;
+  --color-neutral-600: #57534E;
+  --color-neutral-700: #44403C;
+  --color-neutral-800: #292524;
+  --color-neutral-900: #1C1917;
+  --color-neutral-950: #0C0A09;
+
+  /* Semantic Colors */
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-info: #3B82F6;
+
+  /* Background */
+  --color-bg-primary: #FFFBF7;
+  --color-bg-secondary: #F8F6F3;
+  --color-bg-tertiary: #EDE8E3;
+  --color-bg-inverse: #1C1917;
+
+  /* Text */
+  --color-text-primary: #1C1917;
+  --color-text-secondary: #57534E;
+  --color-text-tertiary: #78716C;
+  --color-text-inverse: #FAFAF9;
+  --color-text-muted: #A8A29E;
+
+  /* === TYPOGRAPHY === */
+  
+  /* Font Families */
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", Consolas, monospace;
+
+  /* Font Sizes */
+  --font-size-xs: 0.75rem;   /* 12px */
+  --font-size-sm: 0.875rem;  /* 14px */
+  --font-size-base: 1rem;    /* 16px */
+  --font-size-lg: 1.125rem;  /* 18px */
+  --font-size-xl: 1.25rem;   /* 20px */
+  --font-size-2xl: 1.5rem;   /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+  --font-size-4xl: 2.25rem;  /* 36px */
+  --font-size-5xl: 3rem;     /* 48px */
+  --font-size-6xl: 3.75rem;  /* 60px */
+  --font-size-7xl: 4.5rem;   /* 72px */
+
+  /* Font Weights */
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* Line Heights */
+  --line-height-none: 1;
+  --line-height-tight: 1.2;
+  --line-height-snug: 1.375;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+  --line-height-loose: 2;
+
+  /* Letter Spacing */
+  --letter-spacing-tighter: -0.05em;
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.025em;
+  --letter-spacing-wider: 0.05em;
+  --letter-spacing-widest: 0.1em;
+
+  /* === SPACING === */
+  --space-0: 0;
+  --space-0-5: 0.125rem;  /* 2px */
+  --space-1: 0.25rem;     /* 4px */
+  --space-1-5: 0.375rem;  /* 6px */
+  --space-2: 0.5rem;      /* 8px */
+  --space-2-5: 0.625rem;  /* 10px */
+  --space-3: 0.75rem;     /* 12px */
+  --space-3-5: 0.875rem;  /* 14px */
+  --space-4: 1rem;        /* 16px */
+  --space-5: 1.25rem;     /* 20px */
+  --space-6: 1.5rem;      /* 24px */
+  --space-7: 1.75rem;     /* 28px */
+  --space-8: 2rem;        /* 32px */
+  --space-9: 2.25rem;     /* 36px */
+  --space-10: 2.5rem;     /* 40px */
+  --space-12: 3rem;       /* 48px */
+  --space-14: 3.5rem;     /* 56px */
+  --space-16: 4rem;       /* 64px */
+  --space-20: 5rem;       /* 80px */
+  --space-24: 6rem;       /* 96px */
+
+  /* === RADII === */
+  --radius-none: 0;
+  --radius-xs: 0.25rem;   /* 4px */
+  --radius-sm: 0.375rem;  /* 6px */
+  --radius-md: 0.5rem;    /* 8px */
+  --radius-lg: 0.75rem;   /* 12px */
+  --radius-xl: 1rem;      /* 16px */
+  --radius-2xl: 1.25rem;  /* 20px */
+  --radius-3xl: 1.5rem;   /* 24px */
+  --radius-full: 9999px;
+
+  /* === SHADOWS === */
+  --shadow-xs: 0 1px 2px 0 rgba(28, 25, 23, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(28, 25, 23, 0.08), 0 1px 2px -1px rgba(28, 25, 23, 0.08);
+  --shadow-md: 0 4px 6px -1px rgba(28, 25, 23, 0.08), 0 2px 4px -2px rgba(28, 25, 23, 0.08);
+  --shadow-lg: 0 10px 15px -3px rgba(28, 25, 23, 0.08), 0 4px 6px -4px rgba(28, 25, 23, 0.08);
+  --shadow-xl: 0 20px 25px -5px rgba(28, 25, 23, 0.08), 0 8px 10px -6px rgba(28, 25, 23, 0.08);
+  --shadow-2xl: 0 25px 50px -12px rgba(28, 25, 23, 0.2);
+  --shadow-inner: inset 0 2px 4px 0 rgba(28, 25, 23, 0.05);
+  --shadow-primary-glow: 0 4px 14px -3px rgba(224, 62, 62, 0.3);
+  --shadow-accent-glow: 0 4px 14px -3px rgba(34, 197, 94, 0.3);
+  --shadow-warm-glow: 0 4px 14px -3px rgba(217, 119, 6, 0.3);
+
+  /* === ANIMATIONS === */
+  --duration-instant: 0ms;
+  --duration-fastest: 100ms;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 400ms;
+  --duration-slowest: 500ms;
+
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-gentle: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-snappy: cubic-bezier(0.6, 0, 0.4, 1);
+  --ease-smooth: cubic-bezier(0.45, 0, 0.15, 1);
+
+  --transition-fast: all 150ms var(--ease-out);
+  --transition-normal: all 200ms var(--ease-out);
+  --transition-slow: all 300ms var(--ease-out);
+}
+
+/* Dark mode overrides */
+[data-theme="dark"],
+.dark {
+  --color-bg-primary: #1C1917;
+  --color-bg-secondary: #292524;
+  --color-bg-tertiary: #44403C;
+  --color-bg-inverse: #FAFAF9;
+
+  --color-text-primary: #FAFAF9;
+  --color-text-secondary: #D6D3D1;
+  --color-text-tertiary: #A8A29E;
+  --color-text-inverse: #1C1917;
+  --color-text-muted: #78716C;
+
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+}
+

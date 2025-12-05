@@ -2,7 +2,16 @@
   "name": "@repo/ui",
   "version": "0.0.0",
   "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./styles/variables.css": "./src/styles/variables.css"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
