@@ -3,6 +3,9 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { FriendsModule } from './friends/friends.module';
 import { TripadvisorModule } from './tripadvisor/tripadvisor.module';
 
 @Module({
@@ -11,6 +14,9 @@ import { TripadvisorModule } from './tripadvisor/tripadvisor.module';
       isGlobal: true,
     }),
     PrismaModule,
+    AuthModule,
+    UsersModule,
+    FriendsModule,
     TripadvisorModule,
   ],
   controllers: [AppController],
