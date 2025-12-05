@@ -8,9 +8,6 @@ importers:
 
   .:
     devDependencies:
-      '@types/minimatch':
-        specifier: ^6.0.0
-        version: 6.0.0
       prettier:
         specifier: ^3.1.1
         version: 3.7.4
