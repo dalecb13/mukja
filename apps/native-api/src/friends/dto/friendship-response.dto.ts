@@ -7,8 +7,8 @@ export class FriendUserDto {
   @ApiProperty()
   email: string;
 
-  @ApiProperty({ required: false })
-  name?: string;
+  @ApiProperty({ required: false, nullable: true })
+  name: string | null;
 }
 
 export class FriendshipDto {
