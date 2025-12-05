@@ -26,6 +26,8 @@ model User {
   receivedFriendRequests Friendship[]    @relation("FriendshipAddressee")
   ownedGroups            Group[]         @relation("GroupOwner")
   groupMemberships       GroupMember[]
+  games                  Game[]
+  gameSearches           GameSearch[]
 }
 
 enum FriendshipStatus {
@@ -108,6 +110,7 @@ model Group {
 
   owner   User          @relation("GroupOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   members GroupMember[]
+  games   Game[]
 
   @@index([ownerId])
 }
@@ -131,5 +134,61 @@ model GroupMember {
   @@unique([groupId, userId])
   @@index([groupId])
   @@index([userId])
+}
+
+enum GameStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model Game {
+  id        String     @id @default(cuid())
+  ownerId   String
+  groupId   String?
+  status    GameStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  owner    User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  group    Group?       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  searches GameSearch[]
+
+  @@index([ownerId])
+  @@index([groupId])
+}
+
+model GameSearch {
+  id        String   @id @default(cuid())
+  gameId    String
+  userId    String
+  query     String
+  category  String?
+  latLong   String?
+  createdAt DateTime @default(now())
+
+  game    Game               @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  results GameSearchResult[]
+
+  @@index([gameId])
+  @@index([userId])
+}
+
+model GameSearchResult {
+  id            String  @id @default(cuid())
+  searchId      String
+  tripadvisorId String
+  name          String
+  address       String?
+  latitude      Float?
+  longitude     Float?
+  rating        Float?
+  priceLevel    String?
+  imageUrl      String?
+
+  search GameSearch @relation(fields: [searchId], references: [id], onDelete: Cascade)
+
+  @@index([searchId])
 }
 
