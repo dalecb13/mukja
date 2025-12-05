@@ -18,7 +18,6 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/minimatch": "^5.1.2",
     "@types/node": "^20.10.6",
     "@types/react": "^18.2.14",
     "@types/react-dom": "^18.2.18",
