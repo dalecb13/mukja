@@ -64,7 +64,7 @@ export default function LandingPage() {
         <div className={styles.heroContent}>
           <div className={styles.heroTag}>
             <span className={styles.heroTagIcon}>🍜</span>
-            No more "I don't know, where do you want to eat?"
+            No more &ldquo;I don&apos;t know, where do you want to eat?&rdquo;
           </div>
           <h1 className={styles.heroTitle}>
             Decide where to eat,
@@ -73,7 +73,7 @@ export default function LandingPage() {
           </h1>
           <p className={styles.heroSubtitle}>
             Mukja turns the eternal dining debate into a fun game. Search
-            restaurants, swipe with friends, and discover your group's perfect
+            restaurants, swipe with friends, and discover your group&apos;s perfect
             match.
           </p>
           <form className={styles.heroForm} onSubmit={handleSubmit}>
@@ -120,7 +120,7 @@ export default function LandingPage() {
             )}
             {status === "success" && (
               <p className={styles.successMessage}>
-                🎉 Thanks for joining! We'll notify you when Mukja launches.
+                🎉 Thanks for joining! We&apos;ll notify you when Mukja launches.
               </p>
             )}
           </form>
@@ -148,7 +148,7 @@ export default function LandingPage() {
           <div className={styles.phoneFrame}>
             <div className={styles.phoneMockup}>
               <div className={styles.mockupHeader}>
-                <span className={styles.mockupTitle}>Tonight's Pick</span>
+                <span className={styles.mockupTitle}>Tonight&apos;s Pick</span>
                 <span className={styles.mockupSubtitle}>Swipe to vote!</span>
               </div>
               <div className={styles.mockupCard}>
@@ -225,7 +225,7 @@ export default function LandingPage() {
               <h3 className={styles.featureTitle}>Smart Search</h3>
               <p className={styles.featureDescription}>
                 Search by cuisine, location, price, and more. Powered by
-                TripAdvisor's extensive database.
+                TripAdvisor&apos;s extensive database.
               </p>
             </div>
             <div className={styles.featureCard}>
@@ -293,7 +293,7 @@ export default function LandingPage() {
           <h2 className={styles.ctaTitle}>
             Ready to end the
             <br />
-            <span className={styles.ctaTitleAccent}>"where should we eat?"</span>
+            <span className={styles.ctaTitleAccent}>&ldquo;where should we eat?&rdquo;</span>
             <br />
             debate forever?
           </h2>
@@ -325,7 +325,7 @@ export default function LandingPage() {
             </div>
             {status === "success" && (
               <p className={styles.ctaSuccessMessage}>
-                🎉 You're on the list! We'll be in touch soon.
+                🎉 You&apos;re on the list! We&apos;ll be in touch soon.
               </p>
             )}
           </form>
