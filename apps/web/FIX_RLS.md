@@ -9,14 +9,22 @@ Run this SQL in your Supabase SQL Editor to fix RLS issues:
 DROP POLICY IF EXISTS "Allow anonymous inserts" ON waitlist;
 DROP POLICY IF EXISTS "Enable insert for anonymous users" ON waitlist;
 DROP POLICY IF EXISTS "Allow all for anonymous" ON waitlist;
+DROP POLICY IF EXISTS "Allow anonymous inserts with valid email" ON waitlist;
 
--- Step 2: Create the correct policy for anonymous inserts ONLY
--- This allows anonymous users to INSERT but NOT read, update, or delete
-CREATE POLICY "Enable insert for anonymous users" ON waitlist
-  FOR INSERT
-  TO anon
-  WITH CHECK (true);
+-- Step 2: Create the correct policy for anonymous inserts with email validation
+-- This allows anyone (public) to INSERT rows with valid email addresses
+CREATE POLICY "Allow anonymous inserts with valid email" 
+ON "public"."waitlist"
+AS PERMISSIVE
+FOR INSERT
+TO public
+WITH CHECK (
+  email IS NOT NULL 
+  AND email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
+);
 ```
+
+**Note:** Using `TO public` allows both anonymous and authenticated users. If you only want anonymous users, use `TO anon` instead.
 
 **Important:** This policy only allows `INSERT` operations. Anonymous users cannot:
 - Read any waitlist entries (no SELECT policy)

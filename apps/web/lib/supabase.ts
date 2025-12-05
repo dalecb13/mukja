@@ -9,27 +9,24 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-// Create Supabase client configured for server-side usage with anonymous access
-// For server-side API routes, we need to explicitly set the apikey header
-export const supabase = createClient(
-  supabaseUrl || "https://placeholder.supabase.co",
-  supabaseAnonKey || "placeholder-key",
-  {
-    auth: {
-      persistSession: false, // Don't persist session on server
-      autoRefreshToken: false, // No token refresh needed for anonymous
-      detectSessionInUrl: false, // No session detection needed
-    },
-    global: {
-      headers: supabaseAnonKey
-        ? {
-            apikey: supabaseAnonKey,
-            Authorization: `Bearer ${supabaseAnonKey}`,
-          }
-        : {},
-    },
+// Create a server-side Supabase client for API routes
+// This client is configured for anonymous access without session management
+export function createServerClient() {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Supabase environment variables are not set");
   }
-);
+
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+}
+
+// Legacy export for backward compatibility (creates a new client each time)
+export const supabase = createServerClient();
 
 // Database types for waitlist
 export interface WaitlistEntry {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createServerClient } from "@/lib/supabase";
 
 const isDevelopment = process.env.NODE_ENV === "development";
 
@@ -39,8 +39,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Create a fresh Supabase client for this request
+    const supabase = createServerClient();
+
+    // Debug: Log configuration (only in development)
+    if (isDevelopment) {
+      console.log("Supabase config check:", {
+        hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+        hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        urlPrefix: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 20),
+        keyPrefix: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 10),
+      });
+    }
+
     // Insert into Supabase
-    // Use RPC or direct insert with explicit headers for anonymous access
     const { data, error } = await supabase
       .from("waitlist")
       .insert([
