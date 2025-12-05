@@ -22,9 +22,16 @@ export default function LandingPage() {
         body: JSON.stringify({ email }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Something went wrong");
+        // Log full error details to console for debugging
+        console.error("Waitlist API error:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: data,
+        });
+        throw new Error(data.message || data.details || "Something went wrong");
       }
 
       setStatus("success");
@@ -32,6 +39,8 @@ export default function LandingPage() {
     } catch (err) {
       setStatus("error");
       setErrorMessage(err instanceof Error ? err.message : "Failed to join waitlist");
+      // Log error to console for debugging
+      console.error("Waitlist submission error:", err);
     }
   };
   return (

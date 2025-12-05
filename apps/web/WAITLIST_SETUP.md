@@ -21,14 +21,64 @@ CREATE TABLE waitlist (
 -- Enable Row Level Security
 ALTER TABLE waitlist ENABLE ROW LEVEL SECURITY;
 
--- Allow inserts from anon users (for the signup form)
-CREATE POLICY "Allow anonymous inserts" ON waitlist
+-- Drop existing policy if it exists (to avoid conflicts)
+DROP POLICY IF EXISTS "Allow anonymous inserts" ON waitlist;
+DROP POLICY IF EXISTS "Enable insert for anonymous users" ON waitlist;
+DROP POLICY IF EXISTS "Enable insert for all users" ON waitlist;
+
+-- Allow ONLY inserts from anonymous users (for the signup form)
+-- This policy allows anonymous users to insert rows, but NOT read, update, or delete
+CREATE POLICY "Enable insert for anonymous users" ON waitlist
   FOR INSERT
+  TO anon
   WITH CHECK (true);
+
+-- Note: No SELECT policy for anonymous users = they cannot read any data
+-- Only authenticated users (or service role) can read waitlist entries
 
 -- Create index for faster lookups
 CREATE INDEX idx_waitlist_email ON waitlist(email);
 ```
+
+### Troubleshooting RLS Issues
+
+If you're still getting permission errors:
+
+1. **Check if RLS is enabled:**
+   ```sql
+   SELECT tablename, rowsecurity 
+   FROM pg_tables 
+   WHERE schemaname = 'public' AND tablename = 'waitlist';
+   ```
+   Should show `rowsecurity = true`
+
+2. **Check existing policies:**
+   ```sql
+   SELECT * FROM pg_policies WHERE tablename = 'waitlist';
+   ```
+
+3. **Verify the policy is correct:**
+   - Policy should target `anon, authenticated` roles
+   - `WITH CHECK (true)` means any data can be inserted
+   - `FOR INSERT` means it only applies to inserts
+
+4. **Test the policy:**
+   ```sql
+   -- This should work if RLS is set up correctly
+   SET ROLE anon;
+   INSERT INTO waitlist (email, source) VALUES ('test@example.com', 'test');
+   RESET ROLE;
+   ```
+
+5. **If still not working, try a more permissive policy:**
+   ```sql
+   -- More permissive: allows all operations for anonymous users
+   CREATE POLICY "Allow all for anonymous" ON waitlist
+     FOR ALL
+     TO anon
+     USING (true)
+     WITH CHECK (true);
+   ```
 
 ## 3. Add Environment Variables
 
