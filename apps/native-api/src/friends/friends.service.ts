@@ -46,6 +46,18 @@ export class FriendsService {
       if (existingFriendship.status === 'PENDING') {
         throw new ConflictException('Friend request already pending');
       }
+      if (existingFriendship.status === 'REJECTED') {
+        // Update existing rejected friendship to pending with new requester
+        await this.prisma.friendship.update({
+          where: { id: existingFriendship.id },
+          data: {
+            requesterId,
+            addresseeId,
+            status: 'PENDING',
+          },
+        });
+        return;
+      }
     }
 
     await this.prisma.friendship.create({
@@ -230,4 +242,3 @@ export class FriendsService {
     }));
   }
 }
-
