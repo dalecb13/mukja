@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@hcaptcha/react-hcaptcha": "^1.16.0",
     "@repo/ui": "workspace:*",
     "@supabase/supabase-js": "^2.39.0",
     "next": "^14.0.4",
@@ -25,11 +26,5 @@
     "eslint": "^8.56.0",
     "eslint-config-next": "14.0.4",
     "typescript": "5.5.4"
-  },
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
   }
 }

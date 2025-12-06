@@ -21,7 +21,61 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, source } = body;
+    const { email, source, captchaToken } = body;
+
+    // Verify hCaptcha token
+    if (!captchaToken) {
+      return NextResponse.json(
+        { message: "Captcha verification required" },
+        { status: 400 }
+      );
+    }
+
+    // Verify captcha with hCaptcha API
+    const captchaSecret = process.env.HCAPTCHA_SECRET_KEY;
+    if (!captchaSecret) {
+      console.error("HCAPTCHA_SECRET_KEY is not set");
+      return NextResponse.json(
+        {
+          message: "Server configuration error",
+          ...(isDevelopment && { details: "hCaptcha secret key is not configured" }),
+        },
+        { status: 500 }
+      );
+    }
+
+    try {
+      const captchaResponse = await fetch("https://hcaptcha.com/siteverify", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          secret: captchaSecret,
+          response: captchaToken,
+        }),
+      });
+
+      const captchaData = await captchaResponse.json();
+
+      if (!captchaData.success) {
+        console.error("hCaptcha verification failed:", captchaData);
+        return NextResponse.json(
+          {
+            message: "Captcha verification failed",
+            ...(isDevelopment && { details: "Invalid or expired captcha token" }),
+          },
+          { status: 400 }
+        );
+      }
+    } catch (error) {
+      console.error("hCaptcha API error:", error);
+      return NextResponse.json(
+        {
+          message: "Captcha verification error",
+          ...(isDevelopment && { details: "Failed to verify captcha" }),
+        },
+        { status: 500 }
+      );
+    }
 
     // Validate email
     if (!email || typeof email !== "string") {

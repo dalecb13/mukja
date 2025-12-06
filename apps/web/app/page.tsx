@@ -1,16 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 import styles from "./page.module.css";
 
 export default function LandingPage() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const heroCaptchaRef = useRef<HCaptcha>(null);
+  const ctaCaptchaRef = useRef<HCaptcha>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
+
+    // Validate captcha
+    if (!captchaToken) {
+      setErrorMessage("Please complete the captcha verification");
+      return;
+    }
 
     setStatus("loading");
     setErrorMessage("");
@@ -19,7 +29,7 @@ export default function LandingPage() {
       const response = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, captchaToken }),
       });
 
       const data = await response.json();
@@ -36,12 +46,33 @@ export default function LandingPage() {
 
       setStatus("success");
       setEmail("");
+      setCaptchaToken(null);
+      // Reset both captchas
+      heroCaptchaRef.current?.resetCaptcha();
+      ctaCaptchaRef.current?.resetCaptcha();
     } catch (err) {
       setStatus("error");
       setErrorMessage(err instanceof Error ? err.message : "Failed to join waitlist");
       // Log error to console for debugging
       console.error("Waitlist submission error:", err);
+      // Reset captcha on error
+      heroCaptchaRef.current?.resetCaptcha();
+      ctaCaptchaRef.current?.resetCaptcha();
+      setCaptchaToken(null);
     }
+  };
+
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+  };
+
+  const handleCaptchaError = () => {
+    setCaptchaToken(null);
+    setErrorMessage("Captcha verification failed. Please try again.");
+  };
+
+  const handleCaptchaExpire = () => {
+    setCaptchaToken(null);
   };
   return (
     <div className={styles.page}>
@@ -123,6 +154,15 @@ export default function LandingPage() {
                   </>
                 )}
               </button>
+            </div>
+            <div className={styles.captchaWrapper}>
+              <HCaptcha
+                sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || ""}
+                onVerify={handleCaptchaVerify}
+                onError={handleCaptchaError}
+                onExpire={handleCaptchaExpire}
+                ref={heroCaptchaRef}
+              />
             </div>
             {status === "error" && (
               <p className={styles.errorMessage}>{errorMessage}</p>
@@ -332,6 +372,18 @@ export default function LandingPage() {
                   : "Join Waitlist"}
               </button>
             </div>
+            <div className={styles.captchaWrapper}>
+              <HCaptcha
+                sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || ""}
+                onVerify={handleCaptchaVerify}
+                onError={handleCaptchaError}
+                onExpire={handleCaptchaExpire}
+                ref={ctaCaptchaRef}
+              />
+            </div>
+            {status === "error" && (
+              <p className={styles.ctaErrorMessage}>{errorMessage}</p>
+            )}
             {status === "success" && (
               <p className={styles.ctaSuccessMessage}>
                 🎉 You&apos;re on the list! We&apos;ll be in touch soon.

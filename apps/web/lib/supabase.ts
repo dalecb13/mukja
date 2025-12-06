@@ -17,6 +17,9 @@ export function createServerClient() {
   }
 
   return createClient(supabaseUrl, supabaseAnonKey, {
+    db: {
+      schema: 'public', // Explicitly set schema for PostgREST
+    },
     auth: {
       persistSession: false,
       autoRefreshToken: false,

@@ -261,6 +261,12 @@
   font-weight: var(--font-weight-medium);
 }
 
+.captchaWrapper {
+  margin-top: var(--space-4);
+  display: flex;
+  justify-content: center;
+}
+
 .heroStats {
   display: flex;
   align-items: center;
@@ -660,6 +666,13 @@
 .ctaSubmitButton:disabled {
   opacity: 0.8;
   cursor: not-allowed;
+}
+
+.ctaErrorMessage {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-2);
+  text-align: center;
 }
 
 .ctaSuccessMessage {

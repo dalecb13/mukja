@@ -109,8 +109,22 @@ curl -X POST 'https://YOUR_PROJECT.supabase.co/rest/v1/waitlist' \
   -d '{"email":"test@example.com","source":"test"}'
 ```
 
-If this works, the issue is in your Next.js code.
-If this fails, the issue is with Supabase configuration.
+**If this fails but Step 4 works**, the issue is with PostgREST/API layer, not RLS. Common causes:
+- API key format issue
+- PostgREST not recognizing the anon role
+- Schema/table name mismatch
+
+**Try this alternative curl with verbose output:**
+```bash
+curl -v -X POST 'https://YOUR_PROJECT.supabase.co/rest/v1/waitlist' \
+  -H "apikey: YOUR_ANON_KEY" \
+  -H "Authorization: Bearer YOUR_ANON_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d '{"email":"test@example.com","source":"test"}'
+```
+
+The `-v` flag will show the full HTTP response including the error message.
 
 ### Step 4: Verify RLS Policy
 
