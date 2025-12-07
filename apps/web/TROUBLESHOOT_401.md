@@ -8,7 +8,7 @@
 
 Check that these are set in Vercel Dashboard → Settings → Environment Variables:
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
 **Fix:**
 1. Go to Vercel Dashboard
@@ -86,7 +86,7 @@ Add this to your API route temporarily to verify:
 
 ```typescript
 console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL ? "SET" : "MISSING");
-console.log("Supabase Key:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "SET" : "MISSING");
+console.log("Supabase Key:", process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ? "SET" : "MISSING");
 ```
 
 ### Step 2: Check Supabase Logs

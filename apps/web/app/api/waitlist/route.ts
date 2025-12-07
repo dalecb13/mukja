@@ -6,24 +6,17 @@ const isDevelopment = process.env.NODE_ENV === "development";
 export async function POST(request: NextRequest) {
   try {
     // Check if Supabase is configured
-    // Support both legacy (anon) and new (publishable) key naming
-    const hasAnonKey = !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    const hasPublishableKey = !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-    const hasKey = hasAnonKey || hasPublishableKey;
-    
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !hasKey) {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
       console.error("Supabase configuration missing:", {
         hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-        hasAnonKey,
-        hasPublishableKey,
+        hasPublishableKey: !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
       });
       return NextResponse.json(
         {
           message: "Server configuration error",
           ...(isDevelopment && { 
             details: "Supabase environment variables are not set. " +
-              "Required: NEXT_PUBLIC_SUPABASE_URL and " +
-              "NEXT_PUBLIC_SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY). " +
+              "Required: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY. " +
               "IMPORTANT: Use the PUBLISHABLE key (not the secret key) for RLS policies to work."
           }),
         },
@@ -109,15 +102,12 @@ export async function POST(request: NextRequest) {
 
     // Debug: Log configuration (only in development)
     if (isDevelopment) {
-      const keyUsed = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
       console.log("Supabase config check:", {
         hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-        hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
         hasPublishableKey: !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
         urlPrefix: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 20),
-        keyPrefix: keyUsed?.substring(0, 10),
-        keyLength: keyUsed?.length,
-        keyType: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "ANON_KEY" : "PUBLISHABLE_KEY",
+        keyPrefix: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.substring(0, 10),
+        keyLength: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.length,
       });
     }
 
@@ -195,7 +185,7 @@ export async function POST(request: NextRequest) {
           {
             message: "Authentication error",
             ...(isDevelopment && {
-              details: "Supabase authentication failed. Check that NEXT_PUBLIC_SUPABASE_ANON_KEY is set correctly.",
+              details: "Supabase authentication failed. Check that NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is set correctly.",
               error: error.message,
             }),
           },
