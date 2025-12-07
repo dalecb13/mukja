@@ -1,79 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
-import HCaptcha from "@hcaptcha/react-hcaptcha";
+import Link from "next/link";
 import styles from "./page.module.css";
 
 export default function LandingPage() {
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const heroCaptchaRef = useRef<HCaptcha>(null);
-  const ctaCaptchaRef = useRef<HCaptcha>(null);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-
-    // Validate captcha
-    if (!captchaToken) {
-      setErrorMessage("Please complete the captcha verification");
-      return;
-    }
-
-    setStatus("loading");
-    setErrorMessage("");
-
-    try {
-      const response = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, captchaToken }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        // Log full error details to console for debugging
-        console.error("Waitlist API error:", {
-          status: response.status,
-          statusText: response.statusText,
-          error: data,
-        });
-        throw new Error(data.message || data.details || "Something went wrong");
-      }
-
-      setStatus("success");
-      setEmail("");
-      setCaptchaToken(null);
-      // Reset both captchas
-      heroCaptchaRef.current?.resetCaptcha();
-      ctaCaptchaRef.current?.resetCaptcha();
-    } catch (err) {
-      setStatus("error");
-      setErrorMessage(err instanceof Error ? err.message : "Failed to join waitlist");
-      // Log error to console for debugging
-      console.error("Waitlist submission error:", err);
-      // Reset captcha on error
-      heroCaptchaRef.current?.resetCaptcha();
-      ctaCaptchaRef.current?.resetCaptcha();
-      setCaptchaToken(null);
-    }
-  };
-
-  const handleCaptchaVerify = (token: string) => {
-    setCaptchaToken(token);
-  };
-
-  const handleCaptchaError = () => {
-    setCaptchaToken(null);
-    setErrorMessage("Captcha verification failed. Please try again.");
-  };
-
-  const handleCaptchaExpire = () => {
-    setCaptchaToken(null);
-  };
   return (
     <div className={styles.page}>
       {/* Navigation */}
@@ -90,7 +20,7 @@ export default function LandingPage() {
             <a href="#how-it-works" className={styles.navLink}>
               How it Works
             </a>
-            <a href="#waitlist" className={styles.navButton}>Join Waitlist</a>
+            <Link href="/waitlist" className={styles.navButton}>Join Waitlist</Link>
           </div>
         </div>
       </nav>
@@ -116,63 +46,21 @@ export default function LandingPage() {
             restaurants, swipe with friends, and discover your group&apos;s perfect
             match.
           </p>
-          <form className={styles.heroForm} onSubmit={handleSubmit}>
-            <div className={styles.inputWrapper}>
-              <input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={styles.emailInput}
-                disabled={status === "loading" || status === "success"}
-                required
-              />
-              <button
-                type="submit"
-                className={styles.ctaPrimary}
-                disabled={status === "loading" || status === "success"}
-              >
-                {status === "loading" ? (
-                  "Joining..."
-                ) : status === "success" ? (
-                  "You're in! ✓"
-                ) : (
-                  <>
-                    <span>Join Waitlist</span>
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </>
-                )}
-              </button>
-            </div>
-            <div className={styles.captchaWrapper}>
-              <HCaptcha
-                sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || ""}
-                onVerify={handleCaptchaVerify}
-                onError={handleCaptchaError}
-                onExpire={handleCaptchaExpire}
-                ref={heroCaptchaRef}
-              />
-            </div>
-            {status === "error" && (
-              <p className={styles.errorMessage}>{errorMessage}</p>
-            )}
-            {status === "success" && (
-              <p className={styles.successMessage}>
-                🎉 Thanks for joining! We&apos;ll notify you when Mukja launches.
-              </p>
-            )}
-          </form>
+          <Link href="/waitlist" className={styles.ctaPrimary}>
+            <span>Join Waitlist</span>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </Link>
           <p className={styles.heroDisclaimer}>
             Join 500+ foodies on the waitlist. No spam, ever.
           </p>
@@ -349,47 +237,9 @@ export default function LandingPage() {
           <p className={styles.ctaSubtitle}>
             Be the first to know when Mukja launches. Join the waitlist today.
           </p>
-          <form className={styles.ctaForm} onSubmit={handleSubmit}>
-            <div className={styles.ctaInputWrapper}>
-              <input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={styles.ctaEmailInput}
-                disabled={status === "loading" || status === "success"}
-                required
-              />
-              <button
-                type="submit"
-                className={styles.ctaSubmitButton}
-                disabled={status === "loading" || status === "success"}
-              >
-                {status === "loading"
-                  ? "Joining..."
-                  : status === "success"
-                  ? "You're in! ✓"
-                  : "Join Waitlist"}
-              </button>
-            </div>
-            <div className={styles.captchaWrapper}>
-              <HCaptcha
-                sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || ""}
-                onVerify={handleCaptchaVerify}
-                onError={handleCaptchaError}
-                onExpire={handleCaptchaExpire}
-                ref={ctaCaptchaRef}
-              />
-            </div>
-            {status === "error" && (
-              <p className={styles.ctaErrorMessage}>{errorMessage}</p>
-            )}
-            {status === "success" && (
-              <p className={styles.ctaSuccessMessage}>
-                🎉 You&apos;re on the list! We&apos;ll be in touch soon.
-              </p>
-            )}
-          </form>
+          <Link href="/waitlist" className={styles.ctaSubmitButton}>
+            Join Waitlist
+          </Link>
         </div>
       </section>
 
