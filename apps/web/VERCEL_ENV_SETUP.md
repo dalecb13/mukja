@@ -13,7 +13,7 @@ If you're getting a 401 error from Supabase, it's likely because the environment
 2. **Add these variables:**
    ```
    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key-here
    ```
 
 3. **Important Settings:**
@@ -39,13 +39,13 @@ You can verify in your Vercel deployment logs:
 3. Go to Settings → API
 4. Copy:
    - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
-   - **anon/public key** → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - **Publishable key** → `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
 ## Common Issues:
 
 ### Issue: Variables set but still getting 401
 
-**Solution:** Make sure you're using the **anon/public** key, NOT the service_role key. The service_role key bypasses RLS and should never be exposed in client-side code.
+**Solution:** Make sure you're using the **publishable** key, NOT the secret key. The secret key bypasses RLS and should never be exposed in client-side code.
 
 ### Issue: Variables not available in API routes
 

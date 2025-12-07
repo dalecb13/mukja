@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "../styles/global.css";
+import Footer from "./components/Footer";
 
 export const metadata: Metadata = {
   title: "Mukja - Let's Eat Together",
@@ -21,7 +22,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Footer />
+      </body>
     </html>
   );
 }

@@ -18,7 +18,7 @@ The anon key should be a long JWT token. Check:
 **Test:**
 ```bash
 # Check if key looks like a JWT
-echo $NEXT_PUBLIC_SUPABASE_ANON_KEY | head -c 20
+echo $NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY | head -c 20
 # Should output: eyJ...
 ```
 
@@ -27,7 +27,7 @@ echo $NEXT_PUBLIC_SUPABASE_ANON_KEY | head -c 20
 1. Go to Supabase Dashboard → Settings → API
 2. Verify:
    - **Project URL** matches your `NEXT_PUBLIC_SUPABASE_URL`
-   - **anon public** key matches your `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - **publishable** key matches your `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 3. Check if **API is enabled** (should be by default)
 
 ## Solution 3: Test with Different Headers

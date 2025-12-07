@@ -242,43 +242,6 @@ export default function LandingPage() {
           </Link>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className={styles.footer}>
-        <div className={styles.footerContent}>
-          <div className={styles.footerBrand}>
-            <a href="/" className={styles.footerLogo}>
-              <span className={styles.logoIcon}>먹자</span>
-              <span className={styles.logoText}>mukja</span>
-            </a>
-            <p className={styles.footerTagline}>
-              Decide where to eat, together.
-            </p>
-          </div>
-          <div className={styles.footerLinks}>
-            <div className={styles.footerLinkGroup}>
-              <h4 className={styles.footerLinkTitle}>Product</h4>
-              <a href="#features">Features</a>
-              <a href="#how-it-works">How it Works</a>
-              <a href="#">Pricing</a>
-            </div>
-            <div className={styles.footerLinkGroup}>
-              <h4 className={styles.footerLinkTitle}>Company</h4>
-              <a href="#">About</a>
-              <a href="#">Blog</a>
-              <a href="#">Careers</a>
-            </div>
-            <div className={styles.footerLinkGroup}>
-              <h4 className={styles.footerLinkTitle}>Legal</h4>
-              <a href="#">Privacy</a>
-              <a href="#">Terms</a>
-            </div>
-          </div>
-        </div>
-        <div className={styles.footerBottom}>
-          <p>© 2024 Mukja. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   );
 }
