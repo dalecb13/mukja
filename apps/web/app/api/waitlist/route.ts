@@ -6,15 +6,18 @@ const isDevelopment = process.env.NODE_ENV === "development";
 export async function POST(request: NextRequest) {
   try {
     // Check if Supabase is configured
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
       console.error("Supabase configuration missing:", {
         hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-        hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        hasPublishableKey: !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
       });
       return NextResponse.json(
         {
           message: "Server configuration error",
-          ...(isDevelopment && { details: "Supabase environment variables are not set" }),
+          ...(isDevelopment && { 
+            details: "Supabase environment variables are not set. " +
+              "Required: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+          }),
         },
         { status: 500 }
       );
@@ -100,13 +103,73 @@ export async function POST(request: NextRequest) {
     if (isDevelopment) {
       console.log("Supabase config check:", {
         hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-        hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        hasPublishableKey: !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
         urlPrefix: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 20),
-        keyPrefix: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 10),
+        keyPrefix: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.substring(0, 10),
+        keyLength: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.length,
       });
     }
 
-    // Insert into Supabase
+    // Sign in anonymously to create a proper session for RLS
+    // This is required for RLS policies to work correctly
+    const { data: authData, error: authError } = await supabase.auth.signInAnonymously();
+
+    if (authError) {
+      console.error("Anonymous sign-in error:", {
+        code: authError.status,
+        message: authError.message,
+      });
+      return NextResponse.json(
+        {
+          message: "Authentication error",
+          ...(isDevelopment && {
+            details: "Failed to sign in anonymously. Check Supabase configuration and ensure anonymous authentication is enabled.",
+            error: authError.message,
+          }),
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!authData.session) {
+      console.error("Anonymous sign-in succeeded but no session returned");
+      return NextResponse.json(
+        {
+          message: "Authentication error",
+          ...(isDevelopment && {
+            details: "Anonymous sign-in succeeded but no session was returned. Check Supabase anonymous authentication settings.",
+          }),
+        },
+        { status: 500 }
+      );
+    }
+
+    // Verify the session is available on the client
+    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    if (!currentSession) {
+      console.error("Session not found on client after anonymous sign-in");
+      return NextResponse.json(
+        {
+          message: "Authentication error",
+          ...(isDevelopment && {
+            details: "Session not available on client after anonymous sign-in. This may indicate a session persistence issue.",
+          }),
+        },
+        { status: 500 }
+      );
+    }
+
+    if (isDevelopment) {
+      console.log("Anonymous sign-in successful:", {
+        userId: authData.user?.id,
+        hasSession: !!authData.session,
+        hasAccessToken: !!authData.session?.access_token,
+        sessionUserId: currentSession.user?.id,
+        sessionMatches: authData.user?.id === currentSession.user?.id,
+      });
+    }
+
+    // Insert into Supabase using the authenticated session
     const { data, error } = await supabase
       .from("waitlist")
       .insert([
@@ -147,14 +210,15 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Handle authentication errors (401)
-      if (error.message?.includes("JWT") || error.message?.includes("401") || error.code === "PGRST301") {
+      // Handle authentication errors (401) and JWT errors (45201)
+      if (error.message?.includes("JWT") || error.message?.includes("401") || error.code === "PGRST301" || error.code === "45201") {
         return NextResponse.json(
           {
             message: "Authentication error",
             ...(isDevelopment && {
-              details: "Supabase authentication failed. Check that NEXT_PUBLIC_SUPABASE_ANON_KEY is set correctly.",
+              details: "Supabase authentication failed. Check that NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is set correctly and matches your Supabase project. Error code 45201 typically indicates JWT authentication issues.",
               error: error.message,
+              code: error.code,
             }),
           },
           { status: 401 }
