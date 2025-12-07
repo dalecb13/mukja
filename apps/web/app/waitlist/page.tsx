@@ -10,6 +10,7 @@ export default function WaitlistPage() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const captchaRef = useRef<HCaptcha>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,23 +70,50 @@ export default function WaitlistPage() {
     setCaptchaToken(null);
   };
 
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
+
   return (
     <div className={styles.page}>
       {/* Navigation */}
       <nav className={styles.nav}>
         <div className={styles.navContent}>
-          <Link href="/" className={styles.logo}>
+          <Link href="/" className={styles.logo} onClick={closeMenu}>
             <span className={styles.logoIcon}>먹자</span>
             <span className={styles.logoText}>mukja</span>
           </Link>
-          <div className={styles.navLinks}>
-            <Link href="/#features" className={styles.navLink}>
+          <button
+            className={`${styles.hamburger} ${isMenuOpen ? styles.hamburgerOpen : ""}`}
+            onClick={toggleMenu}
+            aria-label="Toggle menu"
+            aria-expanded={isMenuOpen}
+          >
+            <span className={styles.hamburgerLine} />
+            <span className={styles.hamburgerLine} />
+            <span className={styles.hamburgerLine} />
+          </button>
+          {isMenuOpen && (
+            <div
+              className={styles.menuOverlay}
+              onClick={closeMenu}
+              aria-hidden="true"
+            />
+          )}
+          <div className={`${styles.navLinks} ${isMenuOpen ? styles.navLinksOpen : ""}`}>
+            <Link href="/#features" className={styles.navLink} onClick={closeMenu}>
               Features
             </Link>
-            <Link href="/#how-it-works" className={styles.navLink}>
+            <Link href="/#how-it-works" className={styles.navLink} onClick={closeMenu}>
               How it Works
             </Link>
-            <Link href="/" className={styles.navButton}>Back to Home</Link>
+            <Link href="/" className={styles.navButton} onClick={closeMenu}>
+              Back to Home
+            </Link>
           </div>
         </div>
       </nav>

@@ -3,6 +3,8 @@
 .page {
   min-height: 100vh;
   background: var(--color-bg-primary);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Navigation */
@@ -54,6 +56,53 @@
   color: var(--color-text-primary);
 }
 
+/* Hamburger Menu */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 101;
+}
+
+.hamburgerLine {
+  width: 100%;
+  height: 3px;
+  background: var(--color-text-primary);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  transform-origin: center;
+}
+
+.hamburgerLine:nth-child(1) {
+  transform: translateY(0);
+}
+
+.hamburgerLine:nth-child(2) {
+  opacity: 1;
+}
+
+.hamburgerLine:nth-child(3) {
+  transform: translateY(0);
+}
+
+.hamburgerOpen .hamburgerLine:nth-child(1) {
+  transform: translateY(9px) rotate(45deg);
+}
+
+.hamburgerOpen .hamburgerLine:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburgerOpen .hamburgerLine:nth-child(3) {
+  transform: translateY(-9px) rotate(-45deg);
+}
+
 .navLinks {
   display: flex;
   align-items: center;
@@ -86,6 +135,72 @@
   background: var(--color-primary-600);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
+}
+
+/* Mobile Menu */
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+  }
+
+  .navLinks {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 280px;
+    max-width: 85vw;
+    background: white;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: var(--space-20) var(--space-6) var(--space-6);
+    gap: var(--space-4);
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .navLinksOpen {
+    transform: translateX(0);
+  }
+
+  .navLink {
+    width: 100%;
+    padding: var(--space-3) 0;
+    font-size: var(--font-size-base);
+    border-bottom: 1px solid var(--color-neutral-100);
+  }
+
+  .navButton {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    text-align: center;
+    margin-top: var(--space-2);
+  }
+
+}
+
+.menuOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Main Content */
@@ -326,6 +441,137 @@
   .statDivider {
     width: 40px;
     height: 1px;
+  }
+}
+
+/* Extra small screens (iPhone 13 mini and smaller) */
+@media (max-width: 380px) {
+  .nav {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .logo {
+    font-size: var(--font-size-lg);
+    gap: var(--space-1-5);
+  }
+
+  .logoIcon {
+    height: 32px;
+    padding: 0 var(--space-1-5);
+    font-size: var(--font-size-xs);
+  }
+
+  .logoText {
+    font-size: var(--font-size-base);
+  }
+
+  .hamburger {
+    width: 24px;
+    height: 24px;
+  }
+
+  .hamburgerLine {
+    height: 2px;
+  }
+
+  .hamburgerOpen .hamburgerLine:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+  }
+
+  .hamburgerOpen .hamburgerLine:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+  }
+
+  .navLinks {
+    width: 260px;
+    padding: var(--space-16) var(--space-5) var(--space-6);
+  }
+
+  .navButton {
+    padding: var(--space-2-5) var(--space-3);
+    font-size: var(--font-size-xs);
+  }
+
+  .main {
+    padding-top: 70px;
+    padding-bottom: var(--space-16);
+  }
+
+  .container {
+    padding: 0 var(--space-4);
+  }
+
+  .header {
+    margin-bottom: var(--space-6);
+  }
+
+  .title {
+    font-size: clamp(1.75rem, 8vw, 2rem);
+    line-height: 1.2;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  .subtitle {
+    font-size: var(--font-size-base);
+    line-height: 1.5;
+  }
+
+  .form {
+    padding: var(--space-5);
+  }
+
+  .label {
+    font-size: var(--font-size-xs);
+  }
+
+  .input {
+    padding: var(--space-2-5) var(--space-3);
+    font-size: var(--font-size-sm);
+  }
+
+  .submitButton {
+    padding: var(--space-3) var(--space-5);
+    font-size: var(--font-size-sm);
+  }
+
+  .disclaimer {
+    font-size: 10px;
+  }
+
+  .successCard {
+    padding: var(--space-8);
+  }
+
+  .successIcon {
+    font-size: 48px;
+  }
+
+  .successTitle {
+    font-size: var(--font-size-xl);
+  }
+
+  .successMessage {
+    font-size: var(--font-size-sm);
+  }
+
+  .backButton {
+    padding: var(--space-2-5) var(--space-5);
+    font-size: var(--font-size-xs);
+  }
+
+  .stats {
+    gap: var(--space-3);
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+  }
+
+  .statNumber {
+    font-size: var(--font-size-xl);
+  }
+
+  .statLabel {
+    font-size: var(--font-size-xs);
   }
 }
 

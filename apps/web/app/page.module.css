@@ -3,6 +3,8 @@
 .page {
   min-height: 100vh;
   overflow-x: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 /* ========== Navigation ========== */
@@ -856,6 +858,245 @@
   .footerLinks {
     grid-template-columns: 1fr;
     gap: var(--space-6);
+  }
+}
+
+/* Extra small screens (iPhone 13 mini and smaller) */
+@media (max-width: 380px) {
+  .nav {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .logo {
+    font-size: var(--font-size-lg);
+    gap: var(--space-1-5);
+  }
+
+  .logoIcon {
+    height: 32px;
+    padding: 0 var(--space-1-5);
+    font-size: var(--font-size-xs);
+  }
+
+  .logoText {
+    font-size: var(--font-size-base);
+  }
+
+  .hero {
+    padding: var(--space-20) var(--space-3) var(--space-12);
+    min-height: auto;
+  }
+
+  .heroTag {
+    font-size: var(--font-size-xs);
+    padding: var(--space-1-5) var(--space-3);
+    max-width: 100%;
+    word-break: break-word;
+    white-space: normal;
+    line-height: 1.4;
+  }
+
+  .heroTagIcon {
+    flex-shrink: 0;
+  }
+
+  .heroTitle {
+    font-size: clamp(1.75rem, 8vw, 2.25rem);
+    line-height: 1.2;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  .heroSubtitle {
+    font-size: var(--font-size-base);
+    line-height: 1.5;
+    max-width: 100%;
+  }
+
+  .ctaPrimary {
+    padding: var(--space-3) var(--space-5);
+    font-size: var(--font-size-sm);
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ctaPrimary svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+
+  .heroDisclaimer {
+    font-size: var(--font-size-xs);
+  }
+
+  .heroStats {
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+    padding-top: var(--space-6);
+  }
+
+  .heroStatNumber {
+    font-size: var(--font-size-xl);
+  }
+
+  .heroStatLabel {
+    font-size: var(--font-size-xs);
+  }
+
+  .phoneFrame {
+    width: 240px;
+    height: 480px;
+    padding: 8px;
+  }
+
+  .phoneMockup {
+    padding: var(--space-4);
+  }
+
+  .mockupTitle {
+    font-size: var(--font-size-lg);
+  }
+
+  .mockupSubtitle {
+    font-size: var(--font-size-xs);
+  }
+
+  .mockupEmoji {
+    font-size: 60px;
+  }
+
+  .mockupCardContent {
+    padding: var(--space-3);
+  }
+
+  .mockupCardName {
+    font-size: var(--font-size-base);
+  }
+
+  .mockupCardMeta {
+    font-size: var(--font-size-xs);
+  }
+
+  .features {
+    padding: var(--space-16) var(--space-4);
+  }
+
+  .sectionHeader {
+    margin-bottom: var(--space-12);
+  }
+
+  .sectionTag {
+    font-size: var(--font-size-xs);
+    padding: var(--space-1) var(--space-3);
+  }
+
+  .sectionTitle {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+    line-height: 1.3;
+  }
+
+  .featureGrid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .featureCard {
+    padding: var(--space-6);
+  }
+
+  .featureIcon {
+    width: 48px;
+    height: 48px;
+    font-size: var(--font-size-xl);
+  }
+
+  .featureTitle {
+    font-size: var(--font-size-lg);
+  }
+
+  .featureDescription {
+    font-size: var(--font-size-sm);
+  }
+
+  .howItWorks {
+    padding: var(--space-16) var(--space-4);
+  }
+
+  .step {
+    min-width: 100%;
+    max-width: 100%;
+    padding: var(--space-4);
+  }
+
+  .stepNumber {
+    width: 40px;
+    height: 40px;
+    font-size: var(--font-size-lg);
+  }
+
+  .stepTitle {
+    font-size: var(--font-size-lg);
+  }
+
+  .stepDescription {
+    font-size: var(--font-size-sm);
+  }
+
+  .stepArrow {
+    font-size: var(--font-size-2xl);
+    padding-top: var(--space-4);
+  }
+
+  .cta {
+    padding: var(--space-16) var(--space-4);
+  }
+
+  .ctaTitle {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+    line-height: 1.3;
+    word-break: break-word;
+  }
+
+  .ctaSubtitle {
+    font-size: var(--font-size-base);
+  }
+
+  .ctaSubmitButton {
+    padding: var(--space-3) var(--space-5);
+    font-size: var(--font-size-base);
+    width: 100%;
+    display: block;
+    text-align: center;
+  }
+
+  .footer {
+    padding: var(--space-12) var(--space-4) var(--space-6);
+  }
+
+  .footerContent {
+    gap: var(--space-8);
+    padding-bottom: var(--space-8);
+  }
+
+  .footerLinks {
+    gap: var(--space-4);
+  }
+
+  .footerLinkGroup {
+    gap: var(--space-2);
+  }
+
+  .footerLinkTitle {
+    font-size: var(--font-size-xs);
+  }
+
+  .footerLinkGroup a {
+    font-size: var(--font-size-xs);
+  }
+
+  .footerTagline {
+    font-size: var(--font-size-sm);
   }
 }
 
