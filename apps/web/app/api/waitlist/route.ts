@@ -106,7 +106,34 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Insert into Supabase
+    // Sign in anonymously to create a proper session for RLS
+    const { data: authData, error: authError } = await supabase.auth.signInAnonymously();
+
+    if (authError) {
+      console.error("Anonymous sign-in error:", {
+        code: authError.status,
+        message: authError.message,
+      });
+      return NextResponse.json(
+        {
+          message: "Authentication error",
+          ...(isDevelopment && {
+            details: "Failed to sign in anonymously. Check Supabase configuration.",
+            error: authError.message,
+          }),
+        },
+        { status: 500 }
+      );
+    }
+
+    if (isDevelopment) {
+      console.log("Anonymous sign-in successful:", {
+        userId: authData.user?.id,
+        hasSession: !!authData.session,
+      });
+    }
+
+    // Insert into Supabase using the authenticated session
     const { data, error } = await supabase
       .from("waitlist")
       .insert([
