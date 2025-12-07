@@ -6,15 +6,26 @@ const isDevelopment = process.env.NODE_ENV === "development";
 export async function POST(request: NextRequest) {
   try {
     // Check if Supabase is configured
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    // Support both legacy (anon) and new (publishable) key naming
+    const hasAnonKey = !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const hasPublishableKey = !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    const hasKey = hasAnonKey || hasPublishableKey;
+    
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !hasKey) {
       console.error("Supabase configuration missing:", {
         hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-        hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        hasAnonKey,
+        hasPublishableKey,
       });
       return NextResponse.json(
         {
           message: "Server configuration error",
-          ...(isDevelopment && { details: "Supabase environment variables are not set" }),
+          ...(isDevelopment && { 
+            details: "Supabase environment variables are not set. " +
+              "Required: NEXT_PUBLIC_SUPABASE_URL and " +
+              "NEXT_PUBLIC_SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY). " +
+              "IMPORTANT: Use the PUBLISHABLE key (not the secret key) for RLS policies to work."
+          }),
         },
         { status: 500 }
       );
@@ -98,11 +109,15 @@ export async function POST(request: NextRequest) {
 
     // Debug: Log configuration (only in development)
     if (isDevelopment) {
+      const keyUsed = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
       console.log("Supabase config check:", {
         hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-        hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        hasPublishableKey: !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
         urlPrefix: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 20),
-        keyPrefix: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 10),
+        keyPrefix: keyUsed?.substring(0, 10),
+        keyLength: keyUsed?.length,
+        keyType: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "ANON_KEY" : "PUBLISHABLE_KEY",
       });
     }
 
