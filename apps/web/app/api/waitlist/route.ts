@@ -131,10 +131,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!authData.session) {
+      console.error("Anonymous sign-in succeeded but no session returned");
+      return NextResponse.json(
+        {
+          message: "Authentication error",
+          ...(isDevelopment && {
+            details: "Anonymous sign-in succeeded but no session was returned. Check Supabase anonymous authentication settings.",
+          }),
+        },
+        { status: 500 }
+      );
+    }
+
+    // Verify the session is available on the client
+    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    if (!currentSession) {
+      console.error("Session not found on client after anonymous sign-in");
+      return NextResponse.json(
+        {
+          message: "Authentication error",
+          ...(isDevelopment && {
+            details: "Session not available on client after anonymous sign-in. This may indicate a session persistence issue.",
+          }),
+        },
+        { status: 500 }
+      );
+    }
+
     if (isDevelopment) {
       console.log("Anonymous sign-in successful:", {
         userId: authData.user?.id,
         hasSession: !!authData.session,
+        hasAccessToken: !!authData.session?.access_token,
+        sessionUserId: currentSession.user?.id,
+        sessionMatches: authData.user?.id === currentSession.user?.id,
       });
     }
 
