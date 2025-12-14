@@ -61,7 +61,10 @@ export class AuthService {
     const tokens = await this.generateTokens(user.id, user.email);
 
     return {
-      user,
+      user: {
+        ...user,
+        name: user.name ?? undefined,
+      },
       tokens,
     };
   }
@@ -84,7 +87,7 @@ export class AuthService {
     return {
       id: user.id,
       email: user.email,
-      name: user.name,
+      name: user.name ?? undefined,
       createdAt: user.createdAt,
     };
   }
@@ -171,4 +174,6 @@ export class AuthService {
     };
   }
 }
+
+
 

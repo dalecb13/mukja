@@ -46,14 +46,13 @@ export default function WaitlistPage() {
 
       setStatus("success");
       setEmail("");
-      setCaptchaToken(null);
-      captchaRef.current?.resetCaptcha();
     } catch (err) {
       setStatus("error");
       setErrorMessage(err instanceof Error ? err.message : "Failed to join waitlist");
       console.error("Waitlist submission error:", err);
-      captchaRef.current?.resetCaptcha();
-      setCaptchaToken(null);
+    } finally {
+        captchaRef.current?.resetCaptcha();
+        setCaptchaToken(null);
     }
   };
 

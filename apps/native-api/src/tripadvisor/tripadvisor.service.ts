@@ -19,10 +19,11 @@ export class TripadvisorService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {
-    this.apiKey = this.configService.get<string>('TRIPADVISOR_API_KEY');
-    if (!this.apiKey) {
+    const key = this.configService.get<string>('TRIPADVISOR_API_KEY');
+    if (!key) {
       console.warn('TRIPADVISOR_API_KEY is not set in environment variables');
     }
+    this.apiKey = key || '';
   }
 
   async searchLocations(
@@ -130,4 +131,6 @@ export class TripadvisorService {
     );
   }
 }
+
+
 

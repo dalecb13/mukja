@@ -104,3 +104,5 @@ pnpm add @hcaptcha/react-hcaptcha --ignore-scripts
 
 The hcaptcha React component is pure JavaScript and doesn't need native compilation.
 
+
+

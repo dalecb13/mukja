@@ -106,3 +106,5 @@ If this works, the email regex in the policy might be the issue.
 
 Try **Solution 2** first - make the policy work for `TO public` with `WITH CHECK (true)`. This should work regardless of what role PostgREST is using.
 
+
+

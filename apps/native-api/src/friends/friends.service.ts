@@ -8,6 +8,11 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { FriendDto, FriendRequestDto } from './dto/friendship-response.dto';
 
+// Helper to convert null to undefined for optional fields
+function mapUserDto(user: { id: string; email: string; name: string | null }) {
+  return { ...user, name: user.name ?? undefined };
+}
+
 @Injectable()
 export class FriendsService {
   constructor(private prisma: PrismaService) {}
@@ -197,7 +202,7 @@ export class FriendsService {
 
     return friendships.map((f) => ({
       friendshipId: f.id,
-      friend: f.requesterId === userId ? f.addressee : f.requester,
+      friend: mapUserDto(f.requesterId === userId ? f.addressee : f.requester),
       since: f.updatedAt,
     }));
   }
@@ -217,7 +222,7 @@ export class FriendsService {
 
     return requests.map((r) => ({
       id: r.id,
-      user: r.requester,
+      user: mapUserDto(r.requester),
       createdAt: r.createdAt,
     }));
   }
@@ -237,7 +242,7 @@ export class FriendsService {
 
     return requests.map((r) => ({
       id: r.id,
-      user: r.addressee,
+      user: mapUserDto(r.addressee),
       createdAt: r.createdAt,
     }));
   }

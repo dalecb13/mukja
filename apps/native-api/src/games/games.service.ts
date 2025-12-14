@@ -9,6 +9,12 @@ import { TripadvisorService } from '../tripadvisor/tripadvisor.service';
 import { CreateGameDto } from './dto/create-game.dto';
 import { SearchRestaurantsDto } from './dto/search-restaurants.dto';
 import { GameDto, GameDetailDto, GameSearchDto } from './dto/game-response.dto';
+import { LocationCategory } from '../tripadvisor/dto/location-search.dto';
+
+// Helper to convert null to undefined for optional fields
+function mapUserDto(user: { id: string; email: string; name: string | null }) {
+  return { ...user, name: user.name ?? undefined };
+}
 
 @Injectable()
 export class GamesService {
@@ -48,7 +54,7 @@ export class GamesService {
     return {
       id: game.id,
       status: game.status,
-      owner: game.owner,
+      owner: mapUserDto(game.owner),
       group: game.group,
       searchCount: game._count.searches,
       createdAt: game.createdAt,
@@ -82,7 +88,7 @@ export class GamesService {
     return games.map((game) => ({
       id: game.id,
       status: game.status,
-      owner: game.owner,
+      owner: mapUserDto(game.owner),
       group: game.group,
       searchCount: game._count.searches,
       createdAt: game.createdAt,
@@ -125,7 +131,7 @@ export class GamesService {
     return {
       id: game.id,
       status: game.status,
-      owner: game.owner,
+      owner: mapUserDto(game.owner),
       group: game.group ? { id: game.group.id, name: game.group.name } : null,
       searchCount: game.searches.length,
       createdAt: game.createdAt,
@@ -135,7 +141,7 @@ export class GamesService {
         query: search.query,
         category: search.category,
         latLong: search.latLong,
-        user: search.user,
+        user: mapUserDto(search.user),
         createdAt: search.createdAt,
         results: search.results,
       })),
@@ -175,7 +181,7 @@ export class GamesService {
     // Search TripAdvisor for restaurants
     const searchResults = await this.tripadvisorService.searchLocations(
       dto.query,
-      'restaurants',
+      LocationCategory.RESTAURANTS,
       dto.latLong,
     );
 
@@ -191,10 +197,10 @@ export class GamesService {
           create: (searchResults.data || []).map((loc) => ({
             tripadvisorId: loc.location_id,
             name: loc.name,
-            address: loc.address_obj?.address_string,
-            latitude: loc.address_obj?.latitude ? parseFloat(String(loc.address_obj.latitude)) : null,
-            longitude: loc.address_obj?.longitude ? parseFloat(String(loc.address_obj.longitude)) : null,
-            rating: null,
+            address: loc.address_obj?.address_string ?? null,
+            latitude: null, // Not available in search results, need to fetch details
+            longitude: null, // Not available in search results, need to fetch details
+            rating: loc.rating ? parseFloat(loc.rating) : null,
             priceLevel: null,
             imageUrl: null,
           })),
@@ -211,7 +217,7 @@ export class GamesService {
       query: search.query,
       category: search.category,
       latLong: search.latLong,
-      user: search.user,
+      user: mapUserDto(search.user),
       createdAt: search.createdAt,
       results: search.results,
     };
@@ -251,7 +257,7 @@ export class GamesService {
     return {
       id: updated.id,
       status: updated.status,
-      owner: updated.owner,
+      owner: mapUserDto(updated.owner),
       group: updated.group,
       searchCount: updated._count.searches,
       createdAt: updated.createdAt,
@@ -297,4 +303,6 @@ export class GamesService {
     return false;
   }
 }
+
+
 

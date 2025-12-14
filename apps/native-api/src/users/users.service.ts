@@ -30,7 +30,10 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    return user;
+    return {
+      ...user,
+      name: user.name ?? undefined,
+    };
   }
 
   async findByEmail(email: string): Promise<UserProfileDto | null> {
@@ -45,7 +48,12 @@ export class UsersService {
       },
     });
 
-    return user;
+    if (!user) return null;
+
+    return {
+      ...user,
+      name: user.name ?? undefined,
+    };
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<UserProfileDto> {
@@ -69,7 +77,10 @@ export class UsersService {
       },
     });
 
-    return updatedUser;
+    return {
+      ...updatedUser,
+      name: updatedUser.name ?? undefined,
+    };
   }
 
   async changePassword(
@@ -121,4 +132,6 @@ export class UsersService {
     });
   }
 }
+
+
 

@@ -8,7 +8,7 @@ export class GameOwnerDto {
   email: string;
 
   @ApiPropertyOptional()
-  name: string | null;
+  name?: string;
 }
 
 export class GameGroupDto {
@@ -98,4 +98,6 @@ export class GameDetailDto extends GameDto {
   @ApiProperty({ type: [GameSearchDto] })
   searches: GameSearchDto[];
 }
+
+
 

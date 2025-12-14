@@ -11,6 +11,11 @@ import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { GroupDto, GroupDetailDto, GroupMemberDto } from './dto/group-response.dto';
 
+// Helper to convert null to undefined for optional fields
+function mapUserDto(user: { id: string; email: string; name: string | null }) {
+  return { ...user, name: user.name ?? undefined };
+}
+
 @Injectable()
 export class GroupsService {
   constructor(
@@ -40,8 +45,8 @@ export class GroupsService {
     return {
       id: group.id,
       name: group.name,
-      description: group.description,
-      owner: group.owner,
+      description: group.description ?? undefined,
+      owner: mapUserDto(group.owner),
       memberCount: group._count.members,
       createdAt: group.createdAt,
       updatedAt: group.updatedAt,
@@ -64,8 +69,8 @@ export class GroupsService {
     return memberships.map((m) => ({
       id: m.group.id,
       name: m.group.name,
-      description: m.group.description,
-      owner: m.group.owner,
+      description: m.group.description ?? undefined,
+      owner: mapUserDto(m.group.owner),
       memberCount: m.group._count.members,
       createdAt: m.group.createdAt,
       updatedAt: m.group.updatedAt,
@@ -99,14 +104,14 @@ export class GroupsService {
     return {
       id: group.id,
       name: group.name,
-      description: group.description,
-      owner: group.owner,
+      description: group.description ?? undefined,
+      owner: mapUserDto(group.owner),
       memberCount: group.members.length,
       createdAt: group.createdAt,
       updatedAt: group.updatedAt,
       members: group.members.map((m) => ({
         id: m.id,
-        user: m.user,
+        user: mapUserDto(m.user),
         role: m.role,
         joinedAt: m.joinedAt,
       })),
@@ -136,8 +141,8 @@ export class GroupsService {
     return {
       id: group.id,
       name: group.name,
-      description: group.description,
-      owner: group.owner,
+      description: group.description ?? undefined,
+      owner: mapUserDto(group.owner),
       memberCount: group._count.members,
       createdAt: group.createdAt,
       updatedAt: group.updatedAt,
@@ -203,7 +208,7 @@ export class GroupsService {
 
     return {
       id: member.id,
-      user: member.user,
+      user: mapUserDto(member.user),
       role: member.role,
       joinedAt: member.joinedAt,
     };
@@ -285,7 +290,7 @@ export class GroupsService {
 
     return {
       id: updated.id,
-      user: updated.user,
+      user: mapUserDto(updated.user),
       role: updated.role,
       joinedAt: updated.joinedAt,
     };
@@ -317,4 +322,6 @@ export class GroupsService {
     return membership;
   }
 }
+
+
 

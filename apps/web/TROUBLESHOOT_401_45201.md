@@ -190,3 +190,5 @@ If you've checked all the above:
    - If all else fails, Supabase support can check your project configuration
    - Provide them with the error code (45201) and your project details
 
+
+
