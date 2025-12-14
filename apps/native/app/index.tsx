@@ -1,18 +1,21 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { Button } from "@repo/ui";
+import { Link } from "expo-router";
 
 export default function Native() {
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Native</Text>
-      <Button
-        onClick={() => {
-          console.log("Pressed!");
-          alert("Pressed!");
-        }}
-        text="Boop"
-      />
+      <Text style={styles.header}>🍽️ Mukja</Text>
+      <Text style={styles.subtitle}>Find your next meal</Text>
+
+      <View style={styles.buttonContainer}>
+        <Link href="/search" asChild>
+          <TouchableOpacity style={styles.primaryButton}>
+            <Text style={styles.primaryButtonText}>Search Restaurants</Text>
+          </TouchableOpacity>
+        </Link>
+      </View>
+
       <StatusBar style="auto" />
     </View>
   );
@@ -24,10 +27,33 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
+    padding: 20,
   },
   header: {
     fontWeight: "bold",
-    marginBottom: 20,
-    fontSize: 36,
+    marginBottom: 8,
+    fontSize: 42,
+  },
+  subtitle: {
+    fontSize: 18,
+    color: "#666",
+    marginBottom: 40,
+  },
+  buttonContainer: {
+    width: "100%",
+    maxWidth: 300,
+    gap: 12,
+  },
+  primaryButton: {
+    backgroundColor: "#FF5A5F",
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  primaryButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "600",
   },
 });
