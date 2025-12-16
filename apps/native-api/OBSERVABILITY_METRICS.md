@@ -162,10 +162,123 @@ Usage: periodically insert measured quantities to model costs and compare to rev
   - Per-match cost = (TripAdvisor calls * cost_per_call) + infra per request.  
   - Free tier impact: ad revenue per gated result vs cost of serving.
 
+## Subscription Flow Constraint (web-only upgrades/downgrades)
+- All upgrades/downgrades happen in the Next.js web app, not in native.  
+- Native should emit paywall events (viewed) and deeplink users to web for checkout.  
+- Event properties must include `source: web` for subscription_started/renewed/canceled.  
+- Stripe webhooks remain the source of truth; native events are informational only.  
+- Dashboards: break down paywall view→start by source; expect starts/renewals only from web.
+
+## Pricing & Provider Notes (flexible/variable)
+- Pricing inputs must stay configurable (admin-set, not hardcoded) since CPMs, API costs, and infra rates vary by region/time.
+- Ad Providers (ethical/EU-centric priority):  
+  - Didomi (consent-first CMP; pair with chosen ad networks)  
+  - Ogury (privacy-first, EU focus)  
+  - Seedtag (contextual, privacy-forward, strong EU presence)  
+  - Equativ / Smart AdServer (EU-based)  
+  - TripleLift (contextual/CTV; verify consent flows)  
+  - Google AdMob / Ad Manager (ubiquitous; ensure GDPR/TCF compliance)  
+  - IronSource / Unity Ads (mainstream; validate consent/brand suitability)  
+- Rewarded-ads: verify each provider’s policy for this app category and GDPR/TCF support.
+
+## Location Policy (no device location)
+- Do not require device GPS. Users draw/select a zone (Idealista-style).  
+- Store zone geometry (polygon/geojson) per match; avoid raw device coords.  
+- Messaging: “We only use the area you draw to find restaurants.”  
+- Query TripAdvisor using zone centroid/bounds; cache/dedupe to minimize calls.
+
+## TripAdvisor Quotas & Variability
+- Assume quotas/pricing will change; keep cost-per-call configurable and monitor usage vs admin-set rates.  
+- Alerts on approaching configured quotas; allow throttling and graceful degradation (smaller batches, caching).  
+- Keep dependency on endpoint mix (search/details/photos) visible in dashboards.
+
 ## Next Steps (implementation)
 - Add Prisma models for the tables above; generate migrations.
 - Implement `/metrics/events`, `/metrics/match`, `/metrics/ad` with auth + rate limit + idempotency.
 - Add cron/queue for daily rollups.
 - Add OpenTelemetry middleware and structured logging.
 - Add dashboards for TripAdvisor success rate/latency, match funnel, paywall conversion, revenue vs cost.
+
+## Dashboard Specs
+Target slices by time (last 24h / 7d / 30d) and by platform (native/web) where relevant.
+
+1) TripAdvisor Reliability & Cost
+- KPIs: success rate (% 2xx), p50/p90/p99 latency, request volume, error codes.
+- Breakdowns: endpoint (search/details/photos), platform, region (if available).
+- Cost: requests * cost_per_call (from `cost_external`) — show estimated monthly run-rate.
+Charts/Widgets:
+- Single-value: Success rate (24h), p99 latency (24h)
+- Time series: Latency p50/p90/p99 by endpoint
+- Time series: Request volume & error rate by endpoint
+- Table: Top error codes / messages (24h)
+- Single-value: Est. monthly TripAdvisor cost (run-rate)
+
+2) Match Funnel
+- Steps: match_created → match_started → card_shown → match_completed.
+- KPIs: drop-off per step, median time to decision, cards per match, likes/pass ratio.
+- Breakdowns: mode (solo/group), vote_rule, participants bucket (1,2,3-5,6+).
+Charts/Widgets:
+- Funnel chart: created → started → shown → completed
+- Time series: matches started/completed per day
+- Distribution: time_to_decision (histogram/percentiles)
+- Distribution: cards_presented per match (box/violin)
+- Ratio: likes vs passes
+
+3) Ad Gate (Rewarded)
+- KPIs: ad_shown → ad_completed rate, average watched_ms, failures.
+- Impact: % gated results unlocked, ad revenue estimate (if provider returns CPM).
+- Breakdown: placement (results_gate), platform.
+Charts/Widgets:
+- Funnel: ad_shown → ad_completed
+- Time series: completion rate & avg watched_ms
+- Single-value: % gated results unlocked
+- Table: failures by reason
+
+4) Paywall & Subscription Conversion
+- Funnel: paywall_viewed → subscription_started → subscription_renewed.
+- KPIs: view→start %, start→renew %, cancellations.
+- Breakdown: plan (monthly/yearly), platform, source (paywall vs settings vs gate).
+Charts/Widgets:
+- Funnel: paywall_viewed → started → renewed
+- Time series: starts by plan; renewals by plan
+- Single-value: view→start %, start→renew %
+- Table: cancellations by reason (if collected)
+
+5) Revenue vs Cost
+- Revenue: net per day/week/month; split by plan (monthly/yearly) and ad revenue.
+- Cost: TripAdvisor, Vercel/infra, Stripe fees, ads SDK (if any), other SaaS.
+- KPI: margin = revenue_net - cost; margin %; MRR/ARR projections.
+Charts/Widgets:
+- Stacked bar: revenue vs cost by category (daily/weekly/monthly)
+- Time series: margin and margin %
+- Single-value: MRR, ARR, Runway (if burn known)
+- Table: cost_external entries (latest period)
+
+6) Reliability & Errors
+- API error rate by route, p50/p90/p99 latency, top error codes.
+- Client vs server error events; retry rates.
+Charts/Widgets:
+- Time series: latency p50/p90/p99 by route
+- Time series: error rate by route/status
+- Table: top routes by errors; top error messages
+- Single-value: current overall error rate (24h)
+
+7) Engagement
+- DAU/WAU/MAU (from event users), sessions per user, matches per user, repeats.
+- Repeat match rate week-over-week; favorites saved (if tracked later).
+Charts/Widgets:
+- Time series: DAU/WAU/MAU
+- Time series: matches per user (avg/median)
+- Cohort or retention-style view: repeat match rate
+- Single-value: sessions per user (median), matches per user (median)
+
+## Alerting Thresholds (initial guards)
+- TripAdvisor success rate < 97% over 30m OR p99 latency > 2s over 30m.
+- Match completion rate drop: completed/created < 60% over 1h (watch for traffic mix).
+- Ad completion rate < 85% over 1h.
+- Paywall view→start < 2% over 24h (investigate pricing/bugs).
+- Revenue vs cost: margin negative for 7d moving window (notify finance).
+- Error rate (server 5xx) > 1% over 15m; client error spike > 3% over 30m.
+
+Data sources: `event`, `event_rollup_daily`, `match_stats`, `ad_impression`, `cost_external`, `revenue`. Use rollups for heavy queries.
 

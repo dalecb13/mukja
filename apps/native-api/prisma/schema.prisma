@@ -192,3 +192,114 @@ model GameSearchResult {
   @@index([searchId])
 }
 
+// ========== Observability & Metrics Tables ==========
+
+model Event {
+  id             String   @id @default(uuid())
+  userId         String?  @map("user_id")
+  sessionId      String   @map("session_id")
+  eventType      String   @map("event_type")
+  properties     Json?
+  accountId      String?  @map("account_id")
+  source         String   @default("native-app")
+  createdAt      DateTime @default(now()) @map("created_at")
+  ingestedAt     DateTime @default(now()) @map("ingested_at")
+  idempotencyKey String?  @unique @map("idempotency_key")
+
+  @@index([eventType, createdAt])
+  @@index([userId, createdAt])
+  @@index([sessionId])
+  @@map("event")
+}
+
+model EventRollupDaily {
+  eventDate     DateTime @map("event_date") @db.Date
+  eventType     String   @map("event_type")
+  count         BigInt
+  uniqueUsers   BigInt?  @map("unique_users")
+  propertiesAgg Json?    @map("properties_agg")
+
+  @@id([eventDate, eventType])
+  @@map("event_rollup_daily")
+}
+
+model CostExternal {
+  id          String   @id @default(uuid())
+  service     String
+  unit        String
+  quantity    Decimal  @db.Decimal(20, 6)
+  unitCost    Decimal  @map("unit_cost") @db.Decimal(20, 6)
+  periodStart DateTime @map("period_start") @db.Date
+  periodEnd   DateTime @map("period_end") @db.Date
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([service, periodStart])
+  @@map("cost_external")
+}
+
+model Revenue {
+  id          String    @id @default(uuid())
+  userId      String?   @map("user_id")
+  source      String
+  plan        String
+  amountGross Decimal   @map("amount_gross") @db.Decimal(20, 6)
+  fees        Decimal   @db.Decimal(20, 6)
+  amountNet   Decimal   @map("amount_net") @db.Decimal(20, 6)
+  periodStart DateTime? @map("period_start") @db.Date
+  periodEnd   DateTime? @map("period_end") @db.Date
+  externalRef String?   @map("external_ref")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([source, createdAt])
+  @@map("revenue")
+}
+
+model MatchStats {
+  id                    String    @id @default(uuid())
+  matchId               String    @unique @map("match_id")
+  mode                  String
+  voteRule              String    @map("vote_rule")
+  participants          Int
+  cardsPresented        Int       @map("cards_presented")
+  cardsLiked            Int       @map("cards_liked")
+  timeToDecisionSeconds Int?      @map("time_to_decision_seconds")
+  resultRestaurantId    String?   @map("result_restaurant_id")
+  completed             Boolean   @default(false)
+  createdAt             DateTime  @default(now()) @map("created_at")
+  completedAt           DateTime? @map("completed_at")
+
+  @@index([mode, createdAt])
+  @@index([completed, createdAt])
+  @@map("match_stats")
+}
+
+model AdImpression {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  placement String
+  provider  String?
+  watchedMs Int      @map("watched_ms")
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@index([placement, createdAt])
+  @@map("ad_impression")
+}
+
+model ApiRequestLog {
+  id        String   @id @default(uuid())
+  route     String
+  method    String
+  status    Int
+  latencyMs Int      @map("latency_ms")
+  userId    String?  @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([route, createdAt])
+  @@index([status, createdAt])
+  @@map("api_request_log")
+}
+

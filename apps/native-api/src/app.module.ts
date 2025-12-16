@@ -9,6 +9,7 @@ import { FriendsModule } from './friends/friends.module';
 import { GroupsModule } from './groups/groups.module';
 import { GamesModule } from './games/games.module';
 import { TripadvisorModule } from './tripadvisor/tripadvisor.module';
+import { MetricsModule } from './metrics/metrics.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { TripadvisorModule } from './tripadvisor/tripadvisor.module';
     GroupsModule,
     GamesModule,
     TripadvisorModule,
+    MetricsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
