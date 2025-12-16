@@ -6,6 +6,18 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Enable CORS for web clients (native app running in browser)
+  app.enableCors({
+    origin: [
+      'http://localhost:8081',  // Expo web dev server
+      'http://localhost:19006', // Expo web alternate port
+      'http://localhost:3000',  // Next.js web app
+      'http://localhost:3001',  // Alternative dev port
+    ],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    credentials: true,
+  });
+
   // Enable validation
   app.useGlobalPipes(
     new ValidationPipe({
