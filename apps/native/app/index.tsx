@@ -1,23 +1,26 @@
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Link } from "expo-router";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function Native() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>🍽️ Mukja</Text>
-      <Text style={styles.subtitle}>Find your next meal</Text>
+    <ProtectedRoute>
+      <View style={styles.container}>
+        <Text style={styles.header}>🍽️ Mukja</Text>
+        <Text style={styles.subtitle}>Find your next meal</Text>
 
-      <View style={styles.buttonContainer}>
-        <Link href="/search" asChild>
-          <TouchableOpacity style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>Search Restaurants</Text>
-          </TouchableOpacity>
-        </Link>
+        <View style={styles.buttonContainer}>
+          <Link href="/search" asChild>
+            <TouchableOpacity style={styles.primaryButton}>
+              <Text style={styles.primaryButtonText}>Search Restaurants</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
+
+        <StatusBar style="auto" />
       </View>
-
-      <StatusBar style="auto" />
-    </View>
+    </ProtectedRoute>
   );
 }
 

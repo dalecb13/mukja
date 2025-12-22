@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Link } from "expo-router";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // API base URL - change this to your native-api server address
 const API_BASE_URL = __DEV__
@@ -99,7 +100,8 @@ export default function SearchPage() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ProtectedRoute>
+      <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
@@ -170,6 +172,7 @@ export default function SearchPage() {
         <StatusBar style="auto" />
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </ProtectedRoute>
   );
 }
 

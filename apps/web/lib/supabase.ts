@@ -38,6 +38,25 @@ export function createServerClient() {
 // Legacy export for backward compatibility (creates a new client each time)
 export const supabase = createServerClient();
 
+// Create a client-side Supabase client for use in React components
+// This client is configured with session persistence and auto-refresh
+export function createClientClient() {
+  if (!supabaseUrl || !supabasePublishableKey) {
+    throw new Error(
+      "Supabase environment variables are not set. " +
+      "Required: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+    );
+  }
+
+  return createClient(supabaseUrl, supabasePublishableKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  });
+}
+
 // Database types for waitlist
 export interface WaitlistEntry {
   id: string;
