@@ -16,6 +16,7 @@
     "@repo/ui": "workspace:*",
     "@supabase/supabase-js": "^2.39.0",
     "expo": "~52.0.46",
+    "expo-clipboard": "^8.0.8",
     "expo-constants": "~17.0.8",
     "expo-linking": "~7.0.5",
     "expo-router": "~4.0.21",

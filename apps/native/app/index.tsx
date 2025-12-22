@@ -1,62 +1,45 @@
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
-import { StatusBar } from "expo-status-bar";
-import { Link } from "expo-router";
-import ProtectedRoute from "./components/ProtectedRoute";
+import { useEffect } from "react";
+import { useRouter, useSegments } from "expo-router";
+import { useAuth } from "./contexts/AuthContext";
+import { View, ActivityIndicator, StyleSheet, Text } from "react-native";
 
-export default function Native() {
+export default function Index() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const segments = useSegments();
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      // User is not authenticated, redirect to login
+      router.replace("/login");
+    } else {
+      // User is authenticated, redirect to home tab
+      // In Expo Router, route groups don't appear in URLs, so /(tabs)/index.tsx is at /
+      router.replace("/(tabs)/");
+    }
+  }, [user, loading, router]);
+
+  // Show loading while checking auth
   return (
-    <ProtectedRoute>
-      <View style={styles.container}>
-        <Text style={styles.header}>🍽️ Mukja</Text>
-        <Text style={styles.subtitle}>Find your next meal</Text>
-
-        <View style={styles.buttonContainer}>
-          <Link href="/search" asChild>
-            <TouchableOpacity style={styles.primaryButton}>
-              <Text style={styles.primaryButtonText}>Search Restaurants</Text>
-            </TouchableOpacity>
-          </Link>
-        </View>
-
-        <StatusBar style="auto" />
-      </View>
-    </ProtectedRoute>
+    <View style={styles.container}>
+      <ActivityIndicator size="large" color="#000000" />
+      <Text style={styles.loadingText}>Loading...</Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
     justifyContent: "center",
-    padding: 20,
-  },
-  header: {
-    fontWeight: "bold",
-    marginBottom: 8,
-    fontSize: 42,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: "#666",
-    marginBottom: 40,
-  },
-  buttonContainer: {
-    width: "100%",
-    maxWidth: 300,
-    gap: 12,
-  },
-  primaryButton: {
-    backgroundColor: "#FF5A5F",
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
     alignItems: "center",
+    backgroundColor: "#ffffff",
   },
-  primaryButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#000000",
   },
 });

@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes
     const {
-      data: { subscription },
+      data: { subscription: authSubscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -57,10 +57,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    const subscription = Linking.addEventListener("url", handleDeepLink);
+    const linkingSubscription = Linking.addEventListener("url", handleDeepLink);
 
     return () => {
-      subscription.remove();
+      authSubscription.unsubscribe();
+      linkingSubscription.remove();
     };
   }, []);
 
