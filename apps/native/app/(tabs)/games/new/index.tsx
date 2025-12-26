@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,25 +9,13 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import ProtectedRoute from "../../../components/ProtectedRoute";
-
-interface GameFilters {
-  cuisine?: string;
-  priceRange?: string;
-  minRating?: string;
-  dietaryRestrictions?: string[];
-}
+import { useGameCreation } from "../../../contexts/GameCreationContext";
 
 export default function NewGameFiltersScreen() {
   const router = useRouter();
-  const [filters, setFilters] = useState<GameFilters>({
-    cuisine: "",
-    priceRange: "",
-    minRating: "",
-    dietaryRestrictions: [],
-  });
+  const { filters, setFilters } = useGameCreation();
 
   const handleNext = () => {
-    // TODO: Store filters in context or pass via navigation state
     router.push("/(tabs)/games/new/map");
   };
 

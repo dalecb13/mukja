@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   StyleSheet,
   Text,
@@ -10,31 +10,111 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import ProtectedRoute from "../../../components/ProtectedRoute";
+import { useGameCreation } from "../../../contexts/GameCreationContext";
+import { gamesApi } from "../../../../lib/api";
+
+// Calculate approximate area of polygon
+function calculatePolygonArea(
+  coordinates: [[number, number][]]
+): number {
+  if (!coordinates[0] || coordinates[0].length < 3) return 0;
+
+  const R = 6371; // Earth radius in km
+  let area = 0;
+  const points = coordinates[0].map(([lng, lat]) => ({
+    latitude: lat,
+    longitude: lng,
+  }));
+
+  for (let i = 0; i < points.length; i++) {
+    const j = (i + 1) % points.length;
+    const lat1 = (points[i].latitude * Math.PI) / 180;
+    const lat2 = (points[j].latitude * Math.PI) / 180;
+    const dLon = ((points[j].longitude - points[i].longitude) * Math.PI) / 180;
+
+    area +=
+      Math.atan2(
+        Math.sin(dLon) * Math.cos(lat2),
+        Math.cos(lat1) * Math.sin(lat2) -
+          Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon)
+      ) * R * R;
+  }
+
+  return Math.abs(area);
+}
 
 export default function NewGameReviewScreen() {
   const router = useRouter();
+  const { filters, mapArea, createGroup, setCreateGroup, reset } = useGameCreation();
   const [creating, setCreating] = useState(false);
-  const [createGroup, setCreateGroup] = useState(false);
-  // TODO: Get filters and map area from navigation state or context
+
+  const mapAreaInfo = useMemo(() => {
+    if (!mapArea || mapArea.type !== "Polygon" || !mapArea.coordinates[0]) {
+      return null;
+    }
+
+    const pointCount = mapArea.coordinates[0].length;
+    const areaKm2 = calculatePolygonArea(mapArea.coordinates);
+    const bounds = mapArea.coordinates[0].reduce(
+      (acc, [lng, lat]) => ({
+        minLat: Math.min(acc.minLat, lat),
+        maxLat: Math.max(acc.maxLat, lat),
+        minLng: Math.min(acc.minLng, lng),
+        maxLng: Math.max(acc.maxLng, lng),
+      }),
+      {
+        minLat: Infinity,
+        maxLat: -Infinity,
+        minLng: Infinity,
+        maxLng: -Infinity,
+      }
+    );
+
+    return {
+      pointCount,
+      areaKm2,
+      centerLat: (bounds.minLat + bounds.maxLat) / 2,
+      centerLng: (bounds.minLng + bounds.maxLng) / 2,
+    };
+  }, [mapArea]);
 
   const handleCreateGame = async () => {
+    if (!mapArea) {
+      Alert.alert("Error", "Please select a map area first.");
+      return;
+    }
+
     setCreating(true);
     try {
-      // TODO: Call API to create game
-      // const game = await createGame({ filters, mapArea, createGroup });
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API call
+      const game = await gamesApi.create({
+        filters: filters,
+        mapArea: mapArea,
+        groupId: createGroup ? undefined : undefined, // TODO: Get actual groupId if creating group game
+      });
+      
+      // Reset context after successful creation
+      reset();
       
       Alert.alert("Success", "Game created successfully!", [
         {
           text: "OK",
           onPress: () => {
-            // TODO: Navigate to game detail page
-            router.replace("/(tabs)/games");
+            // Navigate to game detail page or games list
+            router.replace(`/(tabs)/games/${game.id}`);
           },
         },
       ]);
     } catch (error) {
-      Alert.alert("Error", "Failed to create game. Please try again.");
+      console.error("Create game error:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to create game. Please try again.";
+      Alert.alert(
+        "Error Creating Game",
+        errorMessage,
+        [{ text: "OK" }]
+      );
     } finally {
       setCreating(false);
     }
@@ -53,11 +133,20 @@ export default function NewGameReviewScreen() {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Restaurant Filters</Text>
               <View style={styles.infoCard}>
-                <Text style={styles.infoText}>Cuisine: (to be loaded)</Text>
-                <Text style={styles.infoText}>Price Range: (to be loaded)</Text>
-                <Text style={styles.infoText}>Min Rating: (to be loaded)</Text>
                 <Text style={styles.infoText}>
-                  Dietary Restrictions: (to be loaded)
+                  Cuisine: {filters.cuisine || "Not specified"}
+                </Text>
+                <Text style={styles.infoText}>
+                  Price Range: {filters.priceRange || "Not specified"}
+                </Text>
+                <Text style={styles.infoText}>
+                  Min Rating: {filters.minRating || "Not specified"}
+                </Text>
+                <Text style={styles.infoText}>
+                  Dietary Restrictions:{" "}
+                  {filters.dietaryRestrictions && filters.dietaryRestrictions.length > 0
+                    ? filters.dietaryRestrictions.join(", ")
+                    : "None"}
                 </Text>
               </View>
             </View>
@@ -65,9 +154,27 @@ export default function NewGameReviewScreen() {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Map Area</Text>
               <View style={styles.infoCard}>
-                <Text style={styles.infoText}>
-                  Area selected: ✓ (coordinates to be loaded)
-                </Text>
+                {mapAreaInfo ? (
+                  <>
+                    <Text style={styles.infoText}>
+                      ✓ Area selected successfully
+                    </Text>
+                    <Text style={styles.infoText}>
+                      Points: {mapAreaInfo.pointCount}
+                    </Text>
+                    <Text style={styles.infoText}>
+                      Approximate area: {mapAreaInfo.areaKm2.toFixed(2)} km²
+                    </Text>
+                    <Text style={styles.infoText}>
+                      Center: {mapAreaInfo.centerLat.toFixed(4)},{" "}
+                      {mapAreaInfo.centerLng.toFixed(4)}
+                    </Text>
+                  </>
+                ) : (
+                  <Text style={styles.infoText}>
+                    No area selected. Please go back and select an area.
+                  </Text>
+                )}
               </View>
             </View>
 

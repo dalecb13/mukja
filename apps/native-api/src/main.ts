@@ -6,16 +6,22 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable CORS for web clients (native app running in browser)
+  // Enable CORS for web clients and native apps
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  
   app.enableCors({
-    origin: [
-      'http://localhost:8081',  // Expo web dev server
-      'http://localhost:19006', // Expo web alternate port
-      'http://localhost:3000',  // Next.js web app
-      'http://localhost:3001',  // Alternative dev port
-    ],
+    origin: isDevelopment
+      ? true // Allow all origins in development (for native apps and web)
+      : [
+          // Production: restrict to specific origins
+          'http://localhost:8081',  // Expo web dev server
+          'http://localhost:19006', // Expo web alternate port
+          'http://localhost:3000',  // Next.js web app
+          'http://localhost:3001',  // Alternative dev port
+        ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // Enable validation
@@ -36,9 +42,22 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const port = process.env.PORT || 3002;
-  await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}`);
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3002;
+  
+  try {
+    await app.listen(port);
+    const url = `http://localhost:${port}`;
+    console.log('Application is running on:', url);
+    console.log('Environment:', process.env.NODE_ENV || 'development');
+    console.log('Swagger documentation:', `${url}/api`);
+  } catch (error) {
+    console.error('Failed to start application:', error);
+    process.exit(1);
+  }
 }
-bootstrap();
+
+bootstrap().catch((error) => {
+  console.error('Bootstrap error:', error);
+  process.exit(1);
+});
 

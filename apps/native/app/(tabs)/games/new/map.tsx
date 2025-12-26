@@ -1,30 +1,190 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   StyleSheet,
   Text,
   View,
   TouchableOpacity,
-  ScrollView,
   Alert,
+  ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import ProtectedRoute from "../../../components/ProtectedRoute";
 
+// Define Region type (react-native-maps is native-only)
+export interface Region {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
+}
+import { useGameCreation, MapArea } from "../../../contexts/GameCreationContext";
+import MapSelector from "./components/MapSelector";
+import LocationSearch from "./components/LocationSearch";
+import PolygonControls from "./components/PolygonControls";
+
+// Validation constants
+const MIN_POINTS = 3;
+const MAX_POINTS = 50;
+const MIN_AREA_KM2 = 0.01; // ~0.01 km² minimum
+const MAX_AREA_KM2 = 10000; // ~10,000 km² maximum
+
+// Calculate approximate area of polygon using shoelace formula
+function calculatePolygonArea(
+  points: Array<{ latitude: number; longitude: number }>
+): number {
+  if (points.length < 3) return 0;
+
+  // Convert to radians and use spherical approximation
+  const R = 6371; // Earth radius in km
+  let area = 0;
+
+  for (let i = 0; i < points.length; i++) {
+    const j = (i + 1) % points.length;
+    const lat1 = (points[i].latitude * Math.PI) / 180;
+    const lat2 = (points[j].latitude * Math.PI) / 180;
+    const dLon = ((points[j].longitude - points[i].longitude) * Math.PI) / 180;
+
+    area +=
+      Math.atan2(
+        Math.sin(dLon) * Math.cos(lat2),
+        Math.cos(lat1) * Math.sin(lat2) -
+          Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon)
+      ) * R * R;
+  }
+
+  return Math.abs(area);
+}
+
+// Check if polygon is valid (basic self-intersection check would be more complex)
+function isValidPolygon(
+  points: Array<{ latitude: number; longitude: number }>
+): boolean {
+  if (points.length < MIN_POINTS) return false;
+  if (points.length > MAX_POINTS) return false;
+
+  // Check for duplicate consecutive points
+//   for (let i = 0; i < points.length; i++) {
+//     const next = (i + 1) % points.length;
+//     if (
+//       Math.abs(points[i].latitude - points[next].latitude) < 0.0001 &&
+//       Math.abs(points[i].longitude - points[next].longitude) < 0.0001
+//     ) {
+//       return false;
+//     }
+//   }
+
+//   const area = calculatePolygonArea(points);
+//   if (area < MIN_AREA_KM2 || area > MAX_AREA_KM2) {
+//     return false;
+//   }
+
+  return true;
+}
+
 export default function NewGameMapScreen() {
   const router = useRouter();
-  const [areaSelected, setAreaSelected] = useState(false);
-  // TODO: Integrate actual map component (react-native-maps or similar)
-  // TODO: Store selected map area coordinates
+  const { mapArea, setMapArea, clearMapArea } = useGameCreation();
+  const [polygonPoints, setPolygonPoints] = useState<
+    Array<{ latitude: number; longitude: number }>
+  >([]);
+  const [mapRegion, setMapRegion] = useState<Region | undefined>();
 
-  const handleMapAreaSelect = () => {
-    // TODO: Implement map area selection
-    setAreaSelected(true);
-    Alert.alert("Area Selected", "Map area selection will be implemented with a map library");
+  // Load existing map area from context if available
+  useEffect(() => {
+    if (mapArea && mapArea.type === "Polygon" && mapArea.coordinates[0]) {
+      const points = mapArea.coordinates[0].map(([lng, lat]) => ({
+        latitude: lat,
+        longitude: lng,
+      }));
+      setPolygonPoints(points);
+    }
+  }, []);
+
+  // Convert polygon points to GeoJSON format and save to context
+  useEffect(() => {
+    if (polygonPoints.length >= MIN_POINTS) {
+      // Create coordinate array and ensure polygon is closed (first point = last point)
+      const coords: [number, number][] = polygonPoints.map((point) => [point.longitude, point.latitude] as [number, number]);
+      // Close the polygon if not already closed
+      const firstPoint = coords[0];
+      const lastPoint = coords[coords.length - 1];
+      if (firstPoint[0] !== lastPoint[0] || firstPoint[1] !== lastPoint[1]) {
+        coords.push([firstPoint[0], firstPoint[1]]);
+      }
+      const coordinates: [[number, number][]] = [coords];
+      const geoJson: MapArea = {
+        type: "Polygon",
+        coordinates,
+      };
+      setMapArea(geoJson);
+    } else {
+      setMapArea(null);
+    }
+  }, [polygonPoints, setMapArea]);
+
+  const handlePolygonPointAdd = (point: { latitude: number; longitude: number }) => {
+    if (polygonPoints.length >= MAX_POINTS) {
+      Alert.alert(
+        "Maximum Points Reached",
+        `You can add up to ${MAX_POINTS} points. Please remove some points first.`
+      );
+      return;
+    }
+    setPolygonPoints([...polygonPoints, point]);
   };
 
+  const handleUndo = () => {
+    if (polygonPoints.length > 0) {
+      setPolygonPoints(polygonPoints.slice(0, -1));
+    }
+  };
+
+  const handleClear = () => {
+    Alert.alert(
+      "Clear Selection",
+      "Are you sure you want to clear all points?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: () => {
+            setPolygonPoints([]);
+            clearMapArea();
+          },
+        },
+      ]
+    );
+  };
+
+  const handleLocationSelect = (region: Region) => {
+    setMapRegion(region);
+  };
+
+  const isValid = useMemo(() => isValidPolygon(polygonPoints), [polygonPoints]);
+  const areaKm2 = useMemo(
+    () => calculatePolygonArea(polygonPoints),
+    [polygonPoints]
+  );
+
+  // Button should be enabled when polygon is valid AND mapArea is set
+  const canProceed = useMemo(() => {
+    return isValid && mapArea !== null && mapArea.type === "Polygon";
+  }, [isValid, mapArea]);
+
   const handleNext = () => {
-    if (!areaSelected) {
-      Alert.alert("Select Area", "Please select an area on the map first");
+    if (!canProceed) {
+      if (polygonPoints.length < MIN_POINTS) {
+        Alert.alert(
+          "Incomplete Selection",
+          `Please add at least ${MIN_POINTS} points to create a valid area.`
+        );
+      } else {
+        Alert.alert(
+          "Invalid Selection",
+          "Please ensure your polygon area is properly selected."
+        );
+      }
       return;
     }
     router.push("/(tabs)/games/new/review");
@@ -33,44 +193,42 @@ export default function NewGameMapScreen() {
   return (
     <ProtectedRoute>
       <View style={styles.container}>
-        <ScrollView style={styles.scrollView}>
-          <View style={styles.content}>
-            <Text style={styles.title}>Select Area on Map</Text>
-            <Text style={styles.subtitle}>
-              Choose the geographic area for your restaurant search
-            </Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>Select Area on Map</Text>
+          <Text style={styles.subtitle}>
+            Tap on the map to add points and create your search area
+          </Text>
+        </View>
 
-            <View style={styles.mapPlaceholder}>
-              <Text style={styles.mapPlaceholderText}>
-                🗺️ Map Component
+        <View style={styles.mapContainer}>
+          <LocationSearch onLocationSelect={handleLocationSelect} />
+          <MapSelector
+            polygonPoints={polygonPoints}
+            onPolygonPointAdd={handlePolygonPointAdd}
+            onRegionChange={setMapRegion}
+            initialRegion={mapRegion}
+          />
+        </View>
+
+        <ScrollView style={styles.controlsScroll} contentContainerStyle={styles.controlsContent}>
+          <PolygonControls
+            pointCount={polygonPoints.length}
+            isValid={isValid}
+            onClear={handleClear}
+            onUndo={handleUndo}
+          />
+
+          {isValid && (
+            <View style={styles.areaInfo}>
+              <Text style={styles.areaInfoTitle}>Selected Area</Text>
+              <Text style={styles.areaInfoText}>
+                Points: {polygonPoints.length}
               </Text>
-              <Text style={styles.mapPlaceholderSubtext}>
-                Map integration will be added here
+              <Text style={styles.areaInfoText}>
+                Approximate area: {areaKm2.toFixed(2)} km²
               </Text>
-              <Text style={styles.mapPlaceholderSubtext}>
-                (react-native-maps or similar)
-              </Text>
-              <TouchableOpacity
-                style={styles.selectAreaButton}
-                onPress={handleMapAreaSelect}
-              >
-                <Text style={styles.selectAreaButtonText}>
-                  {areaSelected ? "✓ Area Selected" : "Select Area"}
-                </Text>
-              </TouchableOpacity>
             </View>
-
-            {areaSelected && (
-              <View style={styles.selectedAreaInfo}>
-                <Text style={styles.selectedAreaText}>
-                  ✓ Area selected successfully
-                </Text>
-                <Text style={styles.selectedAreaSubtext}>
-                  Coordinates will be stored here
-                </Text>
-              </View>
-            )}
-          </View>
+          )}
         </ScrollView>
 
         <View style={styles.footer}>
@@ -81,9 +239,9 @@ export default function NewGameMapScreen() {
             <Text style={styles.backButtonText}>Back</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.nextButton, !areaSelected && styles.nextButtonDisabled]}
+            style={[styles.nextButton, !canProceed && styles.nextButtonDisabled]}
             onPress={handleNext}
-            disabled={!areaSelected}
+            disabled={!canProceed}
           >
             <Text style={styles.nextButtonText}>Next: Review</Text>
           </TouchableOpacity>
@@ -98,11 +256,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f5f5f5",
   },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
+  header: {
     padding: 20,
+    paddingBottom: 12,
+    backgroundColor: "#ffffff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
   },
   title: {
     fontSize: 24,
@@ -113,53 +272,35 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: "#666666",
-    marginBottom: 24,
   },
-  mapPlaceholder: {
-    backgroundColor: "#e0e0e0",
-    borderRadius: 12,
+  mapContainer: {
     height: 400,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
+    position: "relative",
   },
-  mapPlaceholderText: {
-    fontSize: 48,
-    marginBottom: 8,
+  controlsScroll: {
+    flex: 0,
   },
-  mapPlaceholderSubtext: {
-    fontSize: 14,
-    color: "#666666",
-    marginBottom: 4,
+  controlsContent: {
+    padding: 20,
+    gap: 16,
   },
-  selectAreaButton: {
-    backgroundColor: "#FF5A5F",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    marginTop: 20,
-  },
-  selectAreaButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  selectedAreaInfo: {
+  areaInfo: {
     backgroundColor: "#e8f5e9",
     padding: 16,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#4caf50",
   },
-  selectedAreaText: {
+  areaInfoTitle: {
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: "600",
+    color: "#2e7d32",
+    marginBottom: 8,
+  },
+  areaInfoText: {
+    fontSize: 14,
     color: "#2e7d32",
     marginBottom: 4,
-  },
-  selectedAreaSubtext: {
-    fontSize: 14,
-    color: "#666666",
   },
   footer: {
     flexDirection: "row",
@@ -199,4 +340,3 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-

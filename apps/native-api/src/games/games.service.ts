@@ -43,6 +43,8 @@ export class GamesService {
       data: {
         ownerId: userId,
         groupId: dto.groupId,
+        filters: dto.filters ? JSON.parse(JSON.stringify(dto.filters)) : null,
+        mapArea: dto.mapArea ? JSON.parse(JSON.stringify(dto.mapArea)) : null,
       },
       include: {
         owner: { select: { id: true, email: true, name: true } },

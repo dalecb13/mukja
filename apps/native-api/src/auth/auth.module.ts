@@ -12,12 +12,19 @@ import { LocalStrategy } from './strategies/local.strategy';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'fallback-secret-change-me',
-        signOptions: {
-          expiresIn: '15m',
-        },
-      }),
+      useFactory: async (configService: ConfigService) => {
+        // Use Supabase JWT secret for token validation
+        // Fallback to JWT_SECRET for backward compatibility
+        const secret = configService.get<string>('SUPABASE_JWT_SECRET') || 
+                      configService.get<string>('JWT_SECRET') || 
+                      'fallback-secret-change-me';
+        return {
+          secret,
+          signOptions: {
+            expiresIn: '15m',
+          },
+        };
+      },
       inject: [ConfigService],
     }),
   ],

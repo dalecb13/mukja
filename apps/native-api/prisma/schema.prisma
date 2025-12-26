@@ -147,6 +147,8 @@ model Game {
   ownerId   String
   groupId   String?
   status    GameStatus @default(ACTIVE)
+  filters   Json?      // Store game filters (cuisine, priceRange, minRating, dietaryRestrictions)
+  mapArea   Json?      // Store map area as GeoJSON
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
