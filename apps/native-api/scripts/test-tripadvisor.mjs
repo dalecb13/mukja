@@ -92,3 +92,5 @@ console.log('================================');
 searchLocations(query, category, latLong);
 
 
+
+

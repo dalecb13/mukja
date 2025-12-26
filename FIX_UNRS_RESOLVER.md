@@ -107,3 +107,5 @@ The hcaptcha React component is pure JavaScript and doesn't need native compilat
 
 
 
+
+

@@ -14,3 +14,5 @@ Notes:
 - Ensure Postgres is running locally on port 5432 with database `mukja`.
 - For other environments, adjust credentials/host as needed.
 
+
+
