@@ -305,3 +305,31 @@ model ApiRequestLog {
   @@map("api_request_log")
 }
 
+model ErrorLog {
+  id            String   @id @default(uuid())
+  userId        String?  @map("user_id")
+  sessionId     String?  @map("session_id")
+  errorType     String   @map("error_type")
+  errorMessage  String   @map("error_message")
+  stackTrace    String?  @map("stack_trace") @db.Text
+  context       Json?    // Additional context (request details, user agent, etc.)
+  severity      String   @default("error") // error, warning, critical
+  source        String   @default("server") // server, client, native-app, web
+  route         String?  // API route if applicable
+  method        String?  // HTTP method if applicable
+  statusCode    Int?     @map("status_code") // HTTP status code if applicable
+  userAgent     String?  @map("user_agent")
+  ipAddress     String?  @map("ip_address")
+  resolved      Boolean  @default(false)
+  resolvedAt    DateTime? @map("resolved_at")
+  resolvedBy    String?  @map("resolved_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([errorType, createdAt])
+  @@index([userId, createdAt])
+  @@index([severity, createdAt])
+  @@index([resolved, createdAt])
+  @@index([source, createdAt])
+  @@map("error_log")
+}
+

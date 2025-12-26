@@ -2,8 +2,10 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Body,
   Query,
+  Param,
   UseGuards,
   Request,
   HttpCode,
@@ -24,6 +26,9 @@ import {
   CreateAdImpressionDto,
   CreateCostDto,
   CreateRevenueDto,
+  CreateErrorLogDto,
+  CreateErrorLogsDto,
+  UpdateErrorLogDto,
 } from './dto';
 
 @ApiTags('metrics')
@@ -149,6 +154,103 @@ export class MetricsController {
   @ApiResponse({ status: 200, description: 'Revenue vs cost summary' })
   async getRevenueCost(@Query('days') days?: string) {
     return await this.metricsService.getRevenueCostSummary(days ? parseInt(days) : 30);
+  }
+
+  // ========== Error Logging Endpoints ==========
+
+  @Post('errors')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Log an error (public endpoint for client-side errors)' })
+  @ApiResponse({ status: 201, description: 'Error logged successfully' })
+  async logError(@Body() dto: CreateErrorLogDto, @Request() req: any) {
+    const userId = req.user?.id;
+    const result = await this.metricsService.createErrorLog(dto, userId);
+    return {
+      message: 'Error logged',
+      id: result.id,
+    };
+  }
+
+  @Post('errors/batch')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOperation({ summary: 'Log multiple errors (batch)' })
+  @ApiResponse({ status: 202, description: 'Errors accepted for processing' })
+  async logErrors(@Body() dto: CreateErrorLogsDto, @Request() req: any) {
+    const userId = req.user?.id;
+    const result = await this.metricsService.createErrorLogs(dto.errors, userId);
+    return {
+      message: 'Errors accepted',
+      ...result,
+    };
+  }
+
+  @Get('errors')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get error logs with filtering' })
+  @ApiQuery({ name: 'severity', required: false })
+  @ApiQuery({ name: 'errorType', required: false })
+  @ApiQuery({ name: 'resolved', required: false, type: Boolean })
+  @ApiQuery({ name: 'source', required: false })
+  @ApiQuery({ name: 'userId', required: false })
+  @ApiQuery({ name: 'days', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'offset', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Error logs' })
+  async getErrorLogs(
+    @Query('severity') severity?: string,
+    @Query('errorType') errorType?: string,
+    @Query('resolved') resolved?: string,
+    @Query('source') source?: string,
+    @Query('userId') userId?: string,
+    @Query('days') days?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    return await this.metricsService.getErrorLogs({
+      severity,
+      errorType,
+      resolved: resolved !== undefined ? resolved === 'true' : undefined,
+      source,
+      userId,
+      days: days ? parseInt(days) : undefined,
+      limit: limit ? parseInt(limit) : undefined,
+      offset: offset ? parseInt(offset) : undefined,
+    });
+  }
+
+  @Patch('errors/:id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update an error log (e.g., mark as resolved)' })
+  @ApiResponse({ status: 200, description: 'Error log updated' })
+  async updateErrorLog(
+    @Param('id') id: string,
+    @Body() dto: UpdateErrorLogDto,
+    @Request() req: any,
+  ) {
+    const userId = req.user?.id;
+    const updateData = {
+      ...dto,
+      resolvedBy: dto.resolved ? userId : dto.resolvedBy,
+    };
+    const result = await this.metricsService.updateErrorLog(id, updateData);
+    return {
+      message: 'Error log updated',
+      id: result.id,
+    };
+  }
+
+  @Get('stats/errors')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get error statistics' })
+  @ApiQuery({ name: 'days', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Error statistics' })
+  async getErrorStats(@Query('days') days?: string) {
+    return await this.metricsService.getErrorStats(days ? parseInt(days) : 7);
   }
 }
 

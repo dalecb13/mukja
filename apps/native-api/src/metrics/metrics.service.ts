@@ -6,6 +6,8 @@ import {
   CreateAdImpressionDto,
   CreateCostDto,
   CreateRevenueDto,
+  CreateErrorLogDto,
+  UpdateErrorLogDto,
 } from './dto';
 import { Prisma } from '@prisma/client';
 
@@ -302,6 +304,169 @@ export class MetricsService {
       totalCost,
       margin: netRevenue - totalCost,
       marginPercent: netRevenue > 0 ? ((netRevenue - totalCost) / netRevenue) * 100 : 0,
+    };
+  }
+
+  /**
+   * Log an error
+   */
+  async createErrorLog(dto: CreateErrorLogDto, defaultUserId?: string) {
+    const userId = dto.errorType === 'AuthenticationError' ? dto.context?.userId as string : defaultUserId;
+    
+    try {
+      return await this.prisma.errorLog.create({
+        data: {
+          userId: userId || (dto.context?.userId as string) || undefined,
+          sessionId: dto.sessionId || undefined,
+          errorType: dto.errorType,
+          errorMessage: dto.errorMessage,
+          stackTrace: dto.stackTrace || undefined,
+          context: dto.context ? (dto.context as Prisma.InputJsonValue) : Prisma.JsonNull,
+          severity: dto.severity || 'error',
+          source: dto.source || 'server',
+          route: dto.route || undefined,
+          method: dto.method || undefined,
+          statusCode: dto.statusCode || undefined,
+          userAgent: dto.userAgent || undefined,
+          ipAddress: dto.ipAddress || undefined,
+        },
+      });
+    } catch (error) {
+      // Log to console if database logging fails (circular dependency prevention)
+      this.logger.error('Failed to log error to database', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Log multiple errors (batch insert)
+   */
+  async createErrorLogs(dtos: CreateErrorLogDto[], defaultUserId?: string) {
+    const results = await Promise.allSettled(
+      dtos.map((dto) => this.createErrorLog(dto, defaultUserId)),
+    );
+
+    const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+    const failed = results.filter((r) => r.status === 'rejected').length;
+
+    if (failed > 0) {
+      const errors = results
+        .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+        .map((r) => r.reason?.message || 'Unknown error');
+      this.logger.warn(`Error log ingestion: ${succeeded} succeeded, ${failed} failed`, errors);
+    }
+
+    return { succeeded, failed, total: dtos.length };
+  }
+
+  /**
+   * Update an error log (e.g., mark as resolved)
+   */
+  async updateErrorLog(id: string, dto: UpdateErrorLogDto) {
+    const updateData: Prisma.ErrorLogUpdateInput = {};
+    
+    if (dto.resolved !== undefined) {
+      updateData.resolved = dto.resolved;
+      if (dto.resolved) {
+        updateData.resolvedAt = new Date();
+      } else {
+        updateData.resolvedAt = null;
+      }
+    }
+    
+    if (dto.resolvedBy) {
+      updateData.resolvedBy = dto.resolvedBy;
+    }
+
+    return await this.prisma.errorLog.update({
+      where: { id },
+      data: updateData,
+    });
+  }
+
+  /**
+   * Get error logs with filtering
+   */
+  async getErrorLogs(filters: {
+    severity?: string;
+    errorType?: string;
+    resolved?: boolean;
+    source?: string;
+    userId?: string;
+    days?: number;
+    limit?: number;
+    offset?: number;
+  } = {}) {
+    const since = filters.days
+      ? new Date(Date.now() - filters.days * 24 * 60 * 60 * 1000)
+      : undefined;
+
+    const where: Prisma.ErrorLogWhereInput = {};
+    
+    if (filters.severity) where.severity = filters.severity;
+    if (filters.errorType) where.errorType = filters.errorType;
+    if (filters.resolved !== undefined) where.resolved = filters.resolved;
+    if (filters.source) where.source = filters.source;
+    if (filters.userId) where.userId = filters.userId;
+    if (since) where.createdAt = { gte: since };
+
+    const [logs, total] = await Promise.all([
+      this.prisma.errorLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: filters.limit || 100,
+        skip: filters.offset || 0,
+      }),
+      this.prisma.errorLog.count({ where }),
+    ]);
+
+    return {
+      logs,
+      total,
+      limit: filters.limit || 100,
+      offset: filters.offset || 0,
+    };
+  }
+
+  /**
+   * Get error statistics
+   */
+  async getErrorStats(days = 7) {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    const [total, bySeverity, byType, unresolved] = await Promise.all([
+      this.prisma.errorLog.count({ where: { createdAt: { gte: since } } }),
+      this.prisma.errorLog.groupBy({
+        by: ['severity'],
+        where: { createdAt: { gte: since } },
+        _count: { id: true },
+      }),
+      this.prisma.errorLog.groupBy({
+        by: ['errorType'],
+        where: { createdAt: { gte: since } },
+        _count: { id: true },
+        orderBy: { _count: { id: 'desc' } },
+        take: 10,
+      }),
+      this.prisma.errorLog.count({
+        where: { createdAt: { gte: since }, resolved: false },
+      }),
+    ]);
+
+    return {
+      days,
+      total,
+      unresolved,
+      resolved: total - unresolved,
+      bySeverity: bySeverity.reduce((acc, item) => {
+        acc[item.severity] = item._count.id;
+        return acc;
+      }, {} as Record<string, number>),
+      topErrors: byType.map((item) => ({
+        errorType: item.errorType,
+        count: item._count.id,
+      })),
     };
   }
 }
