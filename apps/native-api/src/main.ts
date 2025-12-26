@@ -3,7 +3,9 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { MetricsService } from './metrics/metrics.service';
+import { PrismaService } from './prisma/prisma.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -38,6 +40,12 @@ async function bootstrap() {
   // Global exception filter for error logging
   const metricsService = app.get(MetricsService);
   app.useGlobalFilters(new HttpExceptionFilter(metricsService));
+
+  // Global logging interceptor for API request/response logging
+  const prismaService = app.get(PrismaService);
+  // Set MetricsService in PrismaService for performance bottleneck logging
+  (prismaService as any).setMetricsService(metricsService);
+  app.useGlobalInterceptors(new LoggingInterceptor(metricsService, prismaService));
 
   // Swagger setup
   const config = new DocumentBuilder()

@@ -252,6 +252,113 @@ export class MetricsController {
   async getErrorStats(@Query('days') days?: string) {
     return await this.metricsService.getErrorStats(days ? parseInt(days) : 7);
   }
+
+  // ========== Database Query Logging Endpoints ==========
+
+  @Get('database-queries')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get database query logs (30-day retention)' })
+  @ApiQuery({ name: 'model', required: false })
+  @ApiQuery({ name: 'operation', required: false })
+  @ApiQuery({ name: 'minExecutionTime', required: false, type: Number })
+  @ApiQuery({ name: 'userId', required: false })
+  @ApiQuery({ name: 'route', required: false })
+  @ApiQuery({ name: 'success', required: false, type: Boolean })
+  @ApiQuery({ name: 'days', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'offset', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Database query logs' })
+  async getDatabaseQueryLogs(
+    @Query('model') model?: string,
+    @Query('operation') operation?: string,
+    @Query('minExecutionTime') minExecutionTime?: string,
+    @Query('userId') userId?: string,
+    @Query('route') route?: string,
+    @Query('success') success?: string,
+    @Query('days') days?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    return await this.metricsService.getDatabaseQueryLogs({
+      model,
+      operation,
+      minExecutionTime: minExecutionTime ? parseInt(minExecutionTime) : undefined,
+      userId,
+      route,
+      success: success !== undefined ? success === 'true' : undefined,
+      days: days ? parseInt(days) : undefined,
+      limit: limit ? parseInt(limit) : undefined,
+      offset: offset ? parseInt(offset) : undefined,
+    });
+  }
+
+  // ========== Performance Bottleneck Endpoints ==========
+
+  @Get('performance-bottlenecks')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get performance bottleneck logs (30-day retention)' })
+  @ApiQuery({ name: 'type', required: false })
+  @ApiQuery({ name: 'severity', required: false })
+  @ApiQuery({ name: 'resolved', required: false, type: Boolean })
+  @ApiQuery({ name: 'resource', required: false })
+  @ApiQuery({ name: 'days', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'offset', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Performance bottleneck logs' })
+  async getPerformanceBottleneckLogs(
+    @Query('type') type?: string,
+    @Query('severity') severity?: string,
+    @Query('resolved') resolved?: string,
+    @Query('resource') resource?: string,
+    @Query('days') days?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    return await this.metricsService.getPerformanceBottleneckLogs({
+      type,
+      severity,
+      resolved: resolved !== undefined ? resolved === 'true' : undefined,
+      resource,
+      days: days ? parseInt(days) : undefined,
+      limit: limit ? parseInt(limit) : undefined,
+      offset: offset ? parseInt(offset) : undefined,
+    });
+  }
+
+  @Patch('performance-bottlenecks/:id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update performance bottleneck log (mark as resolved)' })
+  @ApiResponse({ status: 200, description: 'Performance bottleneck log updated' })
+  async updatePerformanceBottleneck(
+    @Param('id') id: string,
+    @Request() req: any,
+    @Query('resolved') resolved?: string,
+  ) {
+    const userId = req.user?.id;
+    const isResolved = resolved === 'true';
+    const result = await this.metricsService.updatePerformanceBottleneck(
+      id,
+      isResolved,
+      userId,
+    );
+    return {
+      message: 'Performance bottleneck log updated',
+      id: result.id,
+    };
+  }
+
+  @Get('stats/performance')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get performance statistics (30-day retention)' })
+  @ApiQuery({ name: 'days', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Performance statistics' })
+  async getPerformanceStats(@Query('days') days?: string) {
+    return await this.metricsService.getPerformanceStats(days ? parseInt(days) : 30);
+  }
 }
 
 

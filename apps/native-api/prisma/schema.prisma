@@ -292,16 +292,22 @@ model AdImpression {
 }
 
 model ApiRequestLog {
-  id        String   @id @default(uuid())
-  route     String
-  method    String
-  status    Int
-  latencyMs Int      @map("latency_ms")
-  userId    String?  @map("user_id")
-  createdAt DateTime @default(now()) @map("created_at")
+  id            String   @id @default(uuid())
+  route         String
+  method        String
+  status        Int
+  latencyMs     Int      @map("latency_ms")
+  requestSize   Int?     @map("request_size") // Request body size in bytes
+  responseSize  Int?     @map("response_size") // Response body size in bytes
+  userId        String?  @map("user_id")
+  ipAddress     String?  @map("ip_address")
+  userAgent     String?  @map("user_agent")
+  createdAt     DateTime @default(now()) @map("created_at")
 
   @@index([route, createdAt])
   @@index([status, createdAt])
+  @@index([latencyMs, createdAt]) // For performance bottleneck detection
+  @@index([userId, createdAt])
   @@map("api_request_log")
 }
 
@@ -331,5 +337,48 @@ model ErrorLog {
   @@index([resolved, createdAt])
   @@index([source, createdAt])
   @@map("error_log")
+}
+
+model DatabaseQueryLog {
+  id            String   @id @default(uuid())
+  query         String   @db.Text // SQL query (sanitized)
+  params        Json?    // Query parameters (sanitized)
+  executionTime Int      @map("execution_time") // Execution time in milliseconds
+  model         String?  // Prisma model name (e.g., "User", "Game")
+  operation     String?  // Prisma operation (e.g., "findMany", "create", "update")
+  userId        String?  @map("user_id") // User context if available
+  route         String?  // API route that triggered this query
+  success       Boolean  @default(true)
+  errorMessage  String?  @map("error_message")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([model, createdAt])
+  @@index([operation, createdAt])
+  @@index([executionTime, createdAt]) // For performance bottleneck detection
+  @@index([userId, createdAt])
+  @@index([route, createdAt])
+  @@index([success, createdAt])
+  @@map("database_query_log")
+}
+
+model PerformanceBottleneckLog {
+  id            String   @id @default(uuid())
+  type          String   // "slow_query", "slow_endpoint", "high_memory", "connection_pool_exhausted"
+  severity      String   @default("warning") // "warning", "critical"
+  threshold     Int      @map("threshold_ms") // Threshold in milliseconds
+  actualValue   Int      @map("actual_value_ms") // Actual value in milliseconds
+  resource      String?  // Resource identifier (endpoint route, query model, etc.)
+  details       Json?    // Additional details (query, endpoint, stack trace, etc.)
+  userId        String?  @map("user_id")
+  resolved      Boolean  @default(false)
+  resolvedAt    DateTime? @map("resolved_at")
+  resolvedBy    String?  @map("resolved_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([type, createdAt])
+  @@index([severity, createdAt])
+  @@index([resource, createdAt])
+  @@index([resolved, createdAt])
+  @@map("performance_bottleneck_log")
 }
 

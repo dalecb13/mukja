@@ -173,7 +173,11 @@ export class MetricsService {
     method: string;
     status: number;
     latencyMs: number;
+    requestSize?: number;
+    responseSize?: number;
     userId?: string;
+    ipAddress?: string;
+    userAgent?: string;
   }) {
     return await this.prisma.apiRequestLog.create({
       data: {
@@ -181,7 +185,226 @@ export class MetricsService {
         method: data.method,
         status: data.status,
         latencyMs: data.latencyMs,
-        userId: data.userId,
+        requestSize: data.requestSize || null,
+        responseSize: data.responseSize || null,
+        userId: data.userId || null,
+        ipAddress: data.ipAddress || null,
+        userAgent: data.userAgent || null,
+      },
+    });
+  }
+
+  /**
+   * Log a performance bottleneck
+   */
+  async logPerformanceBottleneck(data: {
+    type: string;
+    severity?: 'warning' | 'critical';
+    threshold: number;
+    actualValue: number;
+    resource?: string;
+    details?: Record<string, unknown>;
+    userId?: string;
+  }) {
+    return await this.prisma.performanceBottleneckLog.create({
+      data: {
+        type: data.type,
+        severity: data.severity || 'warning',
+        threshold: data.threshold,
+        actualValue: data.actualValue,
+        resource: data.resource || null,
+        details: data.details ? (data.details as Prisma.InputJsonValue) : Prisma.JsonNull,
+        userId: data.userId || null,
+      },
+    });
+  }
+
+  /**
+   * Get database query logs with filtering
+   */
+  async getDatabaseQueryLogs(filters: {
+    model?: string;
+    operation?: string;
+    minExecutionTime?: number;
+    userId?: string;
+    route?: string;
+    success?: boolean;
+    days?: number;
+    limit?: number;
+    offset?: number;
+  } = {}) {
+    const since = filters.days
+      ? new Date(Date.now() - filters.days * 24 * 60 * 60 * 1000)
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // Default to 30 days
+
+    const where: Prisma.DatabaseQueryLogWhereInput = {
+      createdAt: { gte: since },
+    };
+
+    if (filters.model) where.model = filters.model;
+    if (filters.operation) where.operation = filters.operation;
+    if (filters.minExecutionTime) where.executionTime = { gte: filters.minExecutionTime };
+    if (filters.userId) where.userId = filters.userId;
+    if (filters.route) where.route = filters.route;
+    if (filters.success !== undefined) where.success = filters.success;
+
+    const [logs, total] = await Promise.all([
+      this.prisma.databaseQueryLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: filters.limit || 100,
+        skip: filters.offset || 0,
+      }),
+      this.prisma.databaseQueryLog.count({ where }),
+    ]);
+
+    return {
+      logs,
+      total,
+      limit: filters.limit || 100,
+      offset: filters.offset || 0,
+    };
+  }
+
+  /**
+   * Get performance bottleneck logs with filtering
+   */
+  async getPerformanceBottleneckLogs(filters: {
+    type?: string;
+    severity?: string;
+    resolved?: boolean;
+    resource?: string;
+    days?: number;
+    limit?: number;
+    offset?: number;
+  } = {}) {
+    const since = filters.days
+      ? new Date(Date.now() - filters.days * 24 * 60 * 60 * 1000)
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // Default to 30 days
+
+    const where: Prisma.PerformanceBottleneckLogWhereInput = {
+      createdAt: { gte: since },
+    };
+
+    if (filters.type) where.type = filters.type;
+    if (filters.severity) where.severity = filters.severity;
+    if (filters.resolved !== undefined) where.resolved = filters.resolved;
+    if (filters.resource) where.resource = filters.resource;
+
+    const [logs, total] = await Promise.all([
+      this.prisma.performanceBottleneckLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: filters.limit || 100,
+        skip: filters.offset || 0,
+      }),
+      this.prisma.performanceBottleneckLog.count({ where }),
+    ]);
+
+    return {
+      logs,
+      total,
+      limit: filters.limit || 100,
+      offset: filters.offset || 0,
+    };
+  }
+
+  /**
+   * Get performance statistics
+   */
+  async getPerformanceStats(days = 30) {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    // API Request Stats
+    const apiStats = await this.prisma.apiRequestLog.aggregate({
+      where: { createdAt: { gte: since } },
+      _avg: { latencyMs: true, requestSize: true, responseSize: true },
+      _max: { latencyMs: true },
+      _min: { latencyMs: true },
+      _count: { id: true },
+    });
+
+    const slowApiRequests = await this.prisma.apiRequestLog.count({
+      where: {
+        createdAt: { gte: since },
+        latencyMs: { gte: 1000 },
+      },
+    });
+
+    // Database Query Stats
+    const queryStats = await this.prisma.databaseQueryLog.aggregate({
+      where: { createdAt: { gte: since } },
+      _avg: { executionTime: true },
+      _max: { executionTime: true },
+      _min: { executionTime: true },
+      _count: { id: true },
+    });
+
+    const slowQueries = await this.prisma.databaseQueryLog.count({
+      where: {
+        createdAt: { gte: since },
+        executionTime: { gte: 500 },
+      },
+    });
+
+    const failedQueries = await this.prisma.databaseQueryLog.count({
+      where: {
+        createdAt: { gte: since },
+        success: false,
+      },
+    });
+
+    // Performance Bottleneck Stats
+    const bottleneckStats = await this.prisma.performanceBottleneckLog.groupBy({
+      by: ['type', 'severity'],
+      where: { createdAt: { gte: since } },
+      _count: { id: true },
+    });
+
+    return {
+      days,
+      api: {
+        totalRequests: apiStats._count.id,
+        avgLatencyMs: apiStats._avg.latencyMs,
+        maxLatencyMs: apiStats._max.latencyMs,
+        minLatencyMs: apiStats._min.latencyMs,
+        avgRequestSize: apiStats._avg.requestSize,
+        avgResponseSize: apiStats._avg.responseSize,
+        slowRequests: slowApiRequests,
+        slowRequestPercentage: apiStats._count.id > 0 ? (slowApiRequests / apiStats._count.id) * 100 : 0,
+      },
+      database: {
+        totalQueries: queryStats._count.id,
+        avgExecutionTimeMs: queryStats._avg.executionTime,
+        maxExecutionTimeMs: queryStats._max.executionTime,
+        minExecutionTimeMs: queryStats._min.executionTime,
+        slowQueries,
+        slowQueryPercentage: queryStats._count.id > 0 ? (slowQueries / queryStats._count.id) * 100 : 0,
+        failedQueries,
+        failedQueryPercentage: queryStats._count.id > 0 ? (failedQueries / queryStats._count.id) * 100 : 0,
+      },
+      bottlenecks: bottleneckStats.reduce(
+        (acc, item) => {
+          const key = `${item.type}_${item.severity}`;
+          acc[key] = item._count.id;
+          return acc;
+        },
+        {} as Record<string, number>,
+      ),
+    };
+  }
+
+  /**
+   * Update performance bottleneck log (mark as resolved)
+   */
+  async updatePerformanceBottleneck(id: string, resolved: boolean, resolvedBy?: string) {
+    return await this.prisma.performanceBottleneckLog.update({
+      where: { id },
+      data: {
+        resolved,
+        resolvedAt: resolved ? new Date() : null,
+        resolvedBy: resolved ? resolvedBy || null : null,
       },
     });
   }
@@ -385,7 +608,7 @@ export class MetricsService {
   }
 
   /**
-   * Get error logs with filtering
+   * Get error logs with filtering (defaults to 30-day retention)
    */
   async getErrorLogs(filters: {
     severity?: string;
@@ -399,7 +622,7 @@ export class MetricsService {
   } = {}) {
     const since = filters.days
       ? new Date(Date.now() - filters.days * 24 * 60 * 60 * 1000)
-      : undefined;
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // Default to 30 days
 
     const where: Prisma.ErrorLogWhereInput = {};
     
